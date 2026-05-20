@@ -3,32 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - خزنتي</title>
+    <title>خزنتي الذكية</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'Tahoma', sans-serif; }
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
-        .login-box {
-            max-width: 450px;
-            width: 100%;
+        .main-container {
+            max-width: 1300px;
+            margin: auto;
             background: white;
             border-radius: 45px;
-            padding: 50px 40px;
-            text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            overflow: hidden;
         }
-        .login-box h1 { color: #1e293b; margin-bottom: 10px; }
-        .login-box p { color: #64748b; margin-bottom: 30px; }
+        .header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .navbar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #334155;
+        }
+        .nav-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .content { padding: 30px; }
+        .login-box {
+            max-width: 450px;
+            margin: 60px auto;
+            background: white;
+            border-radius: 40px;
+            padding: 45px 35px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
         .login-box input {
             width: 100%;
-            padding: 15px;
-            margin: 15px 0;
+            padding: 14px;
+            margin: 12px 0;
             border: 2px solid #e2e8f0;
             border-radius: 60px;
             font-size: 1rem;
@@ -38,40 +72,412 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
             border: none;
             color: white;
-            padding: 14px 35px;
+            padding: 12px 30px;
             border-radius: 60px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
+        }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .form-card {
+            background: #f1f5f9;
+            padding: 25px;
+            border-radius: 30px;
+            margin-bottom: 30px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
+        }
+        input, textarea {
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            padding: 12px;
             width: 100%;
         }
-        .error-msg { color: #ef4444; margin-top: 15px; }
+        .products-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .product-card {
+            background: white;
+            border-radius: 25px;
+            padding: 20px;
+            margin: 15px;
+            width: 300px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .price-tag { font-size: 26px; font-weight: bold; margin: 12px 0; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        th { background: #eef2ff; }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            color: #64748b;
+        }
+        .error-msg { color: #ef4444; margin-top: 10px; }
+        .success-msg { color: #10b981; margin-top: 10px; }
+        @media (max-width: 700px) {
+            .product-card { width: 90%; margin: 15px auto; display: block; }
+        }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h1>🔐 خزنتي السحابية</h1>
-        <p>سجل دخولك كمدير</p>
-        <input type="password" id="password" placeholder="أدخل كلمة السر" onkeyup="if(event.keyCode==13) doLogin()">
-        <button class="btn-primary" onclick="doLogin()">دخول</button>
-        <div id="errorMsg" class="error-msg"></div>
+<div class="main-container">
+    <div class="header">
+        <h1>✨ خزنتي الذكية ✨</h1>
+        <p>تسجيل دخول - إدارة منتجات - شراء</p>
     </div>
 
-    <script>
-        let savedPass = localStorage.getItem('admin_pass');
-        let adminPass = savedPass ? savedPass : '1234';
-        if (!savedPass) localStorage.setItem('admin_pass', '1234');
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 دخول المدير</h2>
+            <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+            <input type="password" id="loginPass" placeholder="كلمة السر">
+            <button class="btn-primary" onclick="doLogin()">دخول</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+    </div>
 
-        function doLogin() {
-            let enteredPass = document.getElementById('password').value;
-            if (enteredPass === adminPass) {
-                localStorage.setItem('admin_logged', 'yes');
-                window.location.href = 'dashboard.html';
-            } else {
-                document.getElementById('errorMsg').innerHTML = '⚠️ كلمة سر غير صحيحة';
-            }
+    <!-- الواجهة الرئيسية -->
+    <div id="mainApp" style="display: none;">
+        <div class="navbar">
+            <button class="nav-btn" id="btnDash" onclick="showPage('dashboard')">📦 إدارة المنتجات</button>
+            <button class="nav-btn" id="btnStore" onclick="showPage('store')">🛍️ واجهة الشراء</button>
+            <button class="nav-btn" id="btnSettings" onclick="showPage('settings')">⚙️ الإعدادات</button>
+            <button class="nav-btn" onclick="logout()">🚪 خروج</button>
+        </div>
+
+        <div class="content">
+            <!-- إدارة المنتجات -->
+            <div id="dashboardPage">
+                <div class="form-card">
+                    <h3>➕ إضافة منتج جديد</h3>
+                    <div class="form-grid">
+                        <input type="text" id="prodName" placeholder="اسم المنتج *">
+                        <input type="number" id="prodPriceEGP" placeholder="السعر بالجنيه *">
+                        <input type="number" id="prodPriceUSD" placeholder="السعر بالدولار">
+                        <input type="text" id="prodLink" placeholder="رابط الشراء *">
+                        <input type="number" id="prodQty" placeholder="الكمية المتاحة">
+                        <textarea id="prodDesc" rows="3" placeholder="وصف المنتج وأهميته..."></textarea>
+                    </div>
+                    <button class="btn-primary" onclick="addProduct()">✨ أضف المنتج</button>
+                </div>
+                <h3>📋 المنتجات المسجلة</h3>
+                <div id="productsTable" style="overflow-x: auto;"></div>
+            </div>
+
+            <!-- صفحة الشراء -->
+            <div id="storePage" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2>🛍️ المنتجات المتاحة</h2>
+                    <div style="background: #f1f5f9; padding: 8px 20px; border-radius: 60px;">
+                        العملة:
+                        <select id="currencySelect" onchange="showStore()">
+                            <option value="egp">🇪🇬 جنيه مصري</option>
+                            <option value="usd">🇺🇸 دولار أمريكي</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="storeGrid" class="products-grid"></div>
+            </div>
+
+            <!-- الإعدادات -->
+            <div id="settingsPage" style="display: none;">
+                <div style="max-width: 550px; margin: 30px auto; background: #f1f5f9; padding: 35px; border-radius: 35px;">
+                    <h3 style="margin-bottom: 25px;">🔐 إعدادات المدير</h3>
+                    <label>البريد الإلكتروني:</label>
+                    <input type="email" id="settingsEmail" placeholder="البريد الإلكتروني" style="margin-bottom: 20px;">
+                    <label>كلمة السر الجديدة:</label>
+                    <input type="password" id="settingsPass" placeholder="كلمة السر الجديدة" style="margin-bottom: 15px;">
+                    <label>تأكيد كلمة السر:</label>
+                    <input type="password" id="settingsConfirmPass" placeholder="تأكيد كلمة السر" style="margin-bottom: 25px;">
+                    <button class="btn-primary" onclick="saveSettings()" style="width: 100%;">💾 حفظ التغييرات</button>
+                    <div id="settingsMsg" style="margin-top: 20px; text-align: center;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            ✅ جميع منتجاتك محفوظة في متصفحك
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== المفتاح ==========
+    const STORAGE_KEY = 'my_store_final';
+    
+    // البيانات الافتراضية
+    const DEFAULT_ADMIN = {
+        email: 'admin@mysite.com',
+        password: '1234'
+    };
+    
+    // تحميل أو إنشاء البيانات
+    let appData = localStorage.getItem(STORAGE_KEY);
+    if (!appData) {
+        appData = {
+            admin: { email: DEFAULT_ADMIN.email, password: DEFAULT_ADMIN.password },
+            products: []
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    } else {
+        appData = JSON.parse(appData);
+        // التأكد من وجود الحقول
+        if (!appData.admin) {
+            appData.admin = { email: DEFAULT_ADMIN.email, password: DEFAULT_ADMIN.password };
         }
-        if (localStorage.getItem('admin_logged') === 'yes') window.location.href = 'dashboard.html';
-    </script>
+        if (!appData.products) {
+            appData.products = [];
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+    
+    // ========== دوال تسجيل الدخول ==========
+    function doLogin() {
+        let email = document.getElementById('loginEmail').value;
+        let pass = document.getElementById('loginPass').value;
+        
+        if (email === appData.admin.email && pass === appData.admin.password) {
+            localStorage.setItem('admin_logged', 'yes');
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('loginError').innerHTML = '';
+            loadProducts();
+            showPage('dashboard');
+            // تعبئة البريد في الإعدادات
+            document.getElementById('settingsEmail').value = appData.admin.email;
+        } else {
+            document.getElementById('loginError').innerHTML = '⚠️ البريد الإلكتروني أو كلمة السر غير صحيحة';
+        }
+    }
+    
+    function logout() {
+        localStorage.removeItem('admin_logged');
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginError').innerHTML = '';
+    }
+    
+    // ========== إدارة المنتجات ==========
+    function loadProducts() {
+        let fresh = localStorage.getItem(STORAGE_KEY);
+        appData = JSON.parse(fresh);
+        showDashboard();
+        showStore();
+    }
+    
+    function showDashboard() {
+        let products = appData.products || [];
+        if (products.length === 0) {
+            document.getElementById('productsTable').innerHTML = '<p style="text-align:center;">✨ لا توجد منتجات، أضف منتجك الأول</p>';
+            return;
+        }
+        
+        let html = `<tr><thead>汽<th>المنتج</th><th>EGP</th><th>USD</th><th>الكمية</th><th>الرابط</th><th>مسح</th></tr></thead><tbody>`;
+        for (let i = 0; i < products.length; i++) {
+            let p = products[i];
+            html += `<tr>
+                        <td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml((p.description || '').substring(0,40))}</small></td>
+                        <td>${p.price_egp} ج.م</td>
+                        <td>${p.price_usd} $</td>
+                        <td>${p.quantity}</td>
+                        <td><a href="${p.purchase_link}" target="_blank">🔗 رابط</a></td>
+                        <td><button class="btn-primary btn-danger" style="padding: 5px 12px;" onclick="deleteProduct(${i})">🗑️ حذف</button></td>
+                    </tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById('productsTable').innerHTML = html;
+    }
+    
+    function addProduct() {
+        let name = document.getElementById('prodName').value;
+        let price_egp = parseFloat(document.getElementById('prodPriceEGP').value);
+        let price_usd = parseFloat(document.getElementById('prodPriceUSD').value) || 0;
+        let link = document.getElementById('prodLink').value;
+        let qty = parseInt(document.getElementById('prodQty').value) || 0;
+        let desc = document.getElementById('prodDesc').value;
+        
+        if (!name || isNaN(price_egp) || !link) {
+            alert('✏️ يرجى ملء اسم المنتج، السعر، ورابط الشراء');
+            return;
+        }
+        
+        let newProduct = {
+            name: name,
+            price_egp: price_egp,
+            price_usd: price_usd,
+            purchase_link: link,
+            quantity: qty,
+            description: desc
+        };
+        
+        appData.products.push(newProduct);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        
+        document.getElementById('prodName').value = '';
+        document.getElementById('prodPriceEGP').value = '';
+        document.getElementById('prodPriceUSD').value = '';
+        document.getElementById('prodLink').value = '';
+        document.getElementById('prodQty').value = '';
+        document.getElementById('prodDesc').value = '';
+        
+        loadProducts();
+        alert('✅ تم إضافة المنتج');
+    }
+    
+    function deleteProduct(index) {
+        if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+            appData.products.splice(index, 1);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            loadProducts();
+            alert('✅ تم الحذف');
+        }
+    }
+    
+    // ========== صفحة الشراء ==========
+    function showStore() {
+        let products = appData.products || [];
+        let currency = document.getElementById('currencySelect').value;
+        
+        if (products.length === 0) {
+            document.getElementById('storeGrid').innerHTML = '<p style="text-align:center;">📭 لا توجد منتجات</p>';
+            return;
+        }
+        
+        let html = '';
+        for (let i = 0; i < products.length; i++) {
+            let p = products[i];
+            let price = currency === 'egp' ? p.price_egp + ' ج.م' : p.price_usd + ' $';
+            html += `<div class="product-card">
+                        <h3>🌟 ${escapeHtml(p.name)}</h3>
+                        <p>${escapeHtml(p.description || 'منتج مميز')}</p>
+                        <div class="price-tag">${price}</div>
+                        <div>📦 متاح: ${p.quantity}</div>
+                        <div style="margin: 15px 0;">
+                            <label>الكمية: </label>
+                            <input type="number" id="qty_${i}" min="1" max="${p.quantity}" value="1" style="width: 80px;">
+                        </div>
+                        <button class="btn-primary btn-success" style="width:100%;" onclick="buyProduct(${i})">🛒 شراء</button>
+                    </div>`;
+        }
+        document.getElementById('storeGrid').innerHTML = html;
+    }
+    
+    function buyProduct(index) {
+        let qtyInput = document.getElementById(`qty_${index}`);
+        let qty = qtyInput ? parseInt(qtyInput.value) : 1;
+        let product = appData.products[index];
+        
+        if (!product || !product.purchase_link) {
+            alert('لا يوجد رابط شراء');
+            return;
+        }
+        if (qty <= 0 || qty > product.quantity) {
+            alert('الكمية غير صحيحة');
+            return;
+        }
+        
+        window.open(product.purchase_link, '_blank');
+        
+        product.quantity -= qty;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        loadProducts();
+        alert(`✅ تم شراء ${qty} من ${product.name}`);
+    }
+    
+    // ========== الإعدادات ==========
+    function saveSettings() {
+        let newEmail = document.getElementById('settingsEmail').value;
+        let newPass = document.getElementById('settingsPass').value;
+        let confirmPass = document.getElementById('settingsConfirmPass').value;
+        
+        if (!newEmail) {
+            document.getElementById('settingsMsg').innerHTML = '✏️ الرجاء إدخال البريد الإلكتروني';
+            document.getElementById('settingsMsg').style.color = 'red';
+            return;
+        }
+        
+        if (newPass !== confirmPass) {
+            document.getElementById('settingsMsg').innerHTML = '❌ كلمتا السر غير متطابقتين';
+            document.getElementById('settingsMsg').style.color = 'red';
+            return;
+        }
+        
+        // تحديث البريد
+        appData.admin.email = newEmail;
+        
+        // تحديث كلمة السر إذا كتبها
+        if (newPass) {
+            appData.admin.password = newPass;
+        }
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        
+        document.getElementById('settingsMsg').innerHTML = '✅ تم حفظ الإعدادات';
+        document.getElementById('settingsMsg').style.color = 'green';
+        document.getElementById('settingsPass').value = '';
+        document.getElementById('settingsConfirmPass').value = '';
+        
+        setTimeout(() => {
+            document.getElementById('settingsMsg').innerHTML = '';
+        }, 3000);
+    }
+    
+    // ========== دوال مساعدة ==========
+    function showPage(page) {
+        document.getElementById('dashboardPage').style.display = page === 'dashboard' ? 'block' : 'none';
+        document.getElementById('storePage').style.display = page === 'store' ? 'block' : 'none';
+        document.getElementById('settingsPage').style.display = page === 'settings' ? 'block' : 'none';
+        
+        let btnDash = document.getElementById('btnDash');
+        let btnStore = document.getElementById('btnStore');
+        let btnSettings = document.getElementById('btnSettings');
+        
+        if (btnDash) btnDash.classList.toggle('active', page === 'dashboard');
+        if (btnStore) btnStore.classList.toggle('active', page === 'store');
+        if (btnSettings) btnSettings.classList.toggle('active', page === 'settings');
+        
+        if (page === 'store') showStore();
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ========== بدء التشغيل ==========
+    if (localStorage.getItem('admin_logged') === 'yes') {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        loadProducts();
+        showPage('dashboard');
+        document.getElementById('settingsEmail').value = appData.admin.email;
+    } else {
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+</script>
 </body>
 </html>
