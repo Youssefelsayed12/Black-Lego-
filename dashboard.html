@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - خزنتي</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'Tahoma', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 30px 20px; }
+        .main-container { max-width: 1300px; margin: auto; background: white; border-radius: 45px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 30px; text-align: center; }
+        .navbar { display: flex; justify-content: center; gap: 15px; padding: 15px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
+        .nav-btn { background: transparent; border: none; padding: 10px 30px; font-size: 1rem; font-weight: bold; border-radius: 40px; cursor: pointer; transition: all 0.3s; color: #334155; }
+        .nav-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .content { padding: 35px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: white; padding: 12px 35px; border-radius: 60px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .form-card { background: #f1f5f9; padding: 25px; border-radius: 30px; margin-bottom: 35px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
+        input, textarea, select { border: 1px solid #cbd5e1; border-radius: 20px; padding: 12px 15px; width: 100%; }
+        .products-grid { display: flex; flex-wrap: wrap; justify-content: center; }
+        .product-card { background: white; border-radius: 28px; padding: 20px; margin: 15px; width: 310px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+        .price-tag { font-size: 28px; font-weight: 800; color: #0f172a; margin: 12px 0; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 24px; overflow: hidden; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        th { background: #eef2ff; }
+        .footer { text-align: center; padding: 20px; background: #f8fafc; color: #64748b; }
+        .loading { text-align: center; padding: 50px; color: #667eea; }
+        @media (max-width: 700px) { .product-card { width: 90%; margin: 15px auto; } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="main-container" id="app">
+    <div class="header">
+        <h1>☁️ خزنتي السحابية ☁️</h1>
+        <p>منتجاتك محفوظة على Supabase | متاحة من أي جهاز</p>
+    </div>
+
+    <div class="navbar">
+        <button class="nav-btn" id="btnDashboard" onclick="showPage('dashboard')">📦 إدارة المنتجات</button>
+        <button class="nav-btn" id="btnStore" onclick="showPage('store')">🛍️ واجهة الشراء</button>
+        <button class="nav-btn" id="btnSettings" onclick="showPage('settings')">⚙️ الإعدادات</button>
+        <button class="nav-btn" onclick="logout()">🚪 خروج</button>
+    </div>
+
+    <div class="content">
+        <div id="loading" class="loading" style="display: none;">⏳ جاري التحميل...</div>
+        
+        <!-- صفحة إدارة المنتجات -->
+        <div id="dashboardPage">
+            <div class="form-card">
+                <h3>➕ إضافة منتج جديد</h3>
+                <div class="form-grid">
+                    <input type="text" id="productName" placeholder="اسم المنتج *">
+                    <input type="number" id="productPriceEGP" placeholder="السعر بالجنيه *">
+                    <input type="number" id="productPriceUSD" placeholder="السعر بالدولار *">
+                    <input type="text" id="productLink" placeholder="رابط الشراء *">
+                    <input type="number" id="productQty" placeholder="الكمية المتاحة">
+                    <textarea id="productDesc" rows="3" placeholder="وصف المنتج..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="addProduct()">✨ أضف المنتج</button>
+            </div>
+            <h3>📋 المنتجات المسجلة</h3>
+            <div id="productsTable" style="overflow-x: auto;"></div>
+        </div>
+
+        <!-- صفحة الشراء -->
+        <div id="storePage" style="display: none;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+                <h2>🛍️ المنتجات المتاحة</h2>
+                <div style="background: #f1f5f9; padding: 8px 20px; border-radius: 60px;">
+                    العملة: 
+                    <select id="currencySelect" onchange="renderStore()">
+                        <option value="egp">🇪🇬 جنيه مصري</option>
+                        <option value="usd">🇺🇸 دولار أمريكي</option>
+                    </select>
+                </div>
+            </div>
+            <div id="storeGrid" class="products-grid"></div>
+        </div>
+
+        <!-- صفحة الإعدادات -->
+        <div id="settingsPage" style="display: none;">
+            <div style="max-width: 550px; margin: 30px auto; background: #f1f5f9; padding: 35px; border-radius: 35px;">
+                <h3>🔐 تغيير كلمة السر</h3>
+                <input type="password" id="newPass" placeholder="كلمة السر الجديدة" style="margin-bottom: 15px;">
+                <input type="password" id="confirmPass" placeholder="تأكيد كلمة السر" style="margin-bottom: 25px;">
+                <button class="btn-primary" onclick="changePassword()">تحديث كلمة السر</button>
+                <div id="passMsg" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">☁️ جميع منتجاتك محفوظة على Supabase السحابية</div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://haznqxasxmwcxlpzxzan.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_bcN3M6Ih0Y3Fhf3bk873GQ_Sd4p4BOy';
+    const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let products = [];
+    let quantities = [];
+
+    // التحقق من تسجيل الدخول
+    if (localStorage.getItem('admin_logged') !== 'yes') {
+        window.location.href = 'login.html';
+    }
+
+    // تحميل المنتجات
+    async function loadProducts() {
+        document.getElementById('loading').style.display = 'block';
+        const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        if (!error) {
+            products = data || [];
+            quantities = products.map(() => 1);
+            renderDashboard();
+            renderStore();
+        }
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    // عرض جدول الإدارة
+    function renderDashboard() {
+        if (products.length === 0) {
+            document.getElementById('productsTable').innerHTML = '<p style="text-align:center;">✨ لا توجد منتجات</p>';
+            return;
+        }
+        let html = `<table><thead><tr><th>المنتج</th><th>EGP</th><th>USD</th><th>الكمية</th><th>الرابط</th><th>مسح</th></tr></thead><tbody>`;
+        for (let p of products) {
+            html += `<tr>
+                        <td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml((p.description || '').substring(0,40))}</small></td>
+                        <td>${p.price_egp} ج.م</td>
+                        <td>${p.price_usd} $</td>
+                        <td>${p.quantity}</td>
+                        <td><a href="${p.purchase_link}" target="_blank">🔗 رابط</a></td>
+                        <td><button class="btn-primary btn-danger" style="padding:5px 15px;" onclick="deleteProduct('${p.id}')">🗑️ حذف</button></td>
+                    </tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById('productsTable').innerHTML = html;
+    }
+
+    // عرض صفحة الشراء
+    function renderStore() {
+        const currency = document.getElementById('currencySelect').value;
+        if (products.length === 0) {
+            document.getElementById('storeGrid').innerHTML = '<p style="text-align:center;">📭 لا توجد منتجات</p>';
+            return;
+        }
+        let html = '';
+        for (let i = 0; i < products.length; i++) {
+            let p = products[i];
+            let price = currency === 'egp' ? p.price_egp + ' ج.م' : p.price_usd + ' $';
+            html += `<div class="product-card">
+                        <h3>🌟 ${escapeHtml(p.name)}</h3>
+                        <p>${escapeHtml(p.description || 'منتج مميز')}</p>
+                        <div class="price-tag">${price}</div>
+                        <div class="currency-badge">📦 متاح: ${p.quantity} قطعة</div>
+                        <div style="margin: 15px 0;">
+                            <label>الكمية: </label>
+                            <input type="number" id="qty_${p.id}" min="1" max="${p.quantity}" value="1" style="width: 85px; display: inline-block;">
+                        </div>
+                        <button class="btn-primary btn-success" style="width: 100%;" onclick="buyProduct('${p.id}', ${p.quantity})">🛒 شراء الآن</button>
+                    </div>`;
+        }
+        document.getElementById('storeGrid').innerHTML = html;
+    }
+
+    // إضافة منتج
+    async function addProduct() {
+        let name = document.getElementById('productName').value;
+        let price_egp = parseFloat(document.getElementById('productPriceEGP').value);
+        let price_usd = parseFloat(document.getElementById('productPriceUSD').value) || 0;
+        let link = document.getElementById('productLink').value;
+        let qty = parseInt(document.getElementById('productQty').value) || 0;
+        let desc = document.getElementById('productDesc').value;
+
+        if (!name || !price_egp || !link) {
+            alert('✏️ يرجى ملء الاسم والسعر والرابط');
+            return;
+        }
+
+        document.getElementById('loading').style.display = 'block';
+        const { error } = await supabase.from('products').insert([{
+            name, price_egp, price_usd, purchase_link: link, quantity: qty, description: desc
+        }]);
+        if (error) alert('خطأ: ' + error.message);
+        else {
+            document.getElementById('productName').value = '';
+            document.getElementById('productPriceEGP').value = '';
+            document.getElementById('productPriceUSD').value = '';
+            document.getElementById('productLink').value = '';
+            document.getElementById('productQty').value = '';
+            document.getElementById('productDesc').value = '';
+            await loadProducts();
+            alert('✅ تم إضافة المنتج');
+        }
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    // حذف منتج
+    async function deleteProduct(id) {
+        if (!confirm('هل أنت متأكد؟')) return;
+        document.getElementById('loading').style.display = 'block';
+        await supabase.from('products').delete().eq('id', id);
+        await loadProducts();
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    // شراء منتج
+    async function buyProduct(id, availableQty) {
+        let qtyInput = document.getElementById(`qty_${id}`);
+        let qty = qtyInput ? parseInt(qtyInput.value) : 1;
+        if (qty <= 0 || qty > availableQty) {
+            alert('الكمية غير صحيحة');
+            return;
+        }
+        let product = products.find(p => p.id == id);
+        if (!product || !product.purchase_link) {
+            alert('لا يوجد رابط شراء');
+            return;
+        }
+        window.open(product.purchase_link, '_blank');
+        
+        document.getElementById('loading').style.display = 'block';
+        let newQty = product.quantity - qty;
+        await supabase.from('products').update({ quantity: newQty }).eq('id', id);
+        await loadProducts();
+        document.getElementById('loading').style.display = 'none';
+        alert(`✅ تم شراء ${qty} من ${product.name}`);
+    }
+
+    // تبديل الصفحات
+    function showPage(page) {
+        document.getElementById('dashboardPage').style.display = page === 'dashboard' ? 'block' : 'none';
+        document.getElementById('storePage').style.display = page === 'store' ? 'block' : 'none';
+        document.getElementById('settingsPage').style.display = page === 'settings' ? 'block' : 'none';
+        
+        document.getElementById('btnDashboard').classList.toggle('active', page === 'dashboard');
+        document.getElementById('btnStore').classList.toggle('active', page === 'store');
+        document.getElementById('btnSettings').classList.toggle('active', page === 'settings');
+        
+        if (page === 'store') renderStore();
+    }
+
+    // تغيير كلمة السر
+    function changePassword() {
+        let newPass = document.getElementById('newPass').value;
+        let confirmPass = document.getElementById('confirmPass').value;
+        if (!newPass) {
+            document.getElementById('passMsg').innerHTML = '✏️ اكتب كلمة سر جديدة';
+            return;
+        }
+        if (newPass !== confirmPass) {
+            document.getElementById('passMsg').innerHTML = '❌ كلمتا السر غير متطابقتين';
+            return;
+        }
+        localStorage.setItem('admin_pass', newPass);
+        document.getElementById('passMsg').innerHTML = '✅ تم تغيير كلمة السر بنجاح';
+        document.getElementById('newPass').value = '';
+        document.getElementById('confirmPass').value = '';
+        setTimeout(() => document.getElementById('passMsg').innerHTML = '', 2000);
+    }
+
+    // تسجيل الخروج
+    function logout() {
+        localStorage.removeItem('admin_logged');
+        window.location.href = 'login.html';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    loadProducts();
+</script>
+</body>
+</html>
