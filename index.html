@@ -2,42 +2,36 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>خزنتي - نسخة بسيطة</title>
+    <title>خزنتي - أبسط نسخة</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Tahoma', 'Cairo', sans-serif;
-        }
         body {
+            font-family: 'Tahoma', sans-serif;
             background: linear-gradient(135deg, #667eea, #764ba2);
             padding: 20px;
         }
-        .box {
-            max-width: 1200px;
+        .container {
+            max-width: 1100px;
             margin: auto;
             background: white;
             border-radius: 30px;
-            padding: 20px;
+            padding: 25px;
         }
         .header {
             background: #1e293b;
             color: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 20px;
             text-align: center;
-            margin-bottom: 20px;
         }
         button, .btn {
             background: #667eea;
-            color: white;
             border: none;
+            color: white;
             padding: 10px 20px;
             border-radius: 30px;
             cursor: pointer;
+            font-size: 14px;
             margin: 5px;
-            font-size: 16px;
         }
         .btn-danger { background: #ef4444; }
         .btn-success { background: #10b981; }
@@ -45,8 +39,8 @@
             width: 100%;
             padding: 10px;
             margin: 8px 0;
-            border: 1px solid #ddd;
             border-radius: 15px;
+            border: 1px solid #ccc;
         }
         .product-card {
             border: 1px solid #eee;
@@ -55,7 +49,6 @@
             margin: 10px;
             width: 280px;
             display: inline-block;
-            vertical-align: top;
             background: #f9f9f9;
         }
         table {
@@ -65,13 +58,12 @@
         th, td {
             padding: 10px;
             border-bottom: 1px solid #ddd;
-            text-align: center;
         }
         .nav-bar {
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-bottom: 20px;
+            margin: 20px 0;
             flex-wrap: wrap;
         }
         .form-card {
@@ -84,76 +76,74 @@
             max-width: 400px;
             margin: 100px auto;
             background: white;
-            padding: 40px;
+            padding: 35px;
             border-radius: 30px;
             text-align: center;
         }
-        .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
-        .error { color: red; margin-top: 10px; }
         .hidden { display: none; }
+        .price { font-size: 22px; font-weight: bold; margin: 10px 0; }
+        .error { color: red; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <!-- شاشة تسجيل الدخول -->
-    <div id="loginSection" class="login-area">
+    <div id="loginBox" class="login-area">
         <h2>🔐 دخول المدير</h2>
-        <input type="password" id="passInput" placeholder="كلمة السر">
+        <input type="password" id="passwordInput" placeholder="كلمة السر">
         <button onclick="checkLogin()">دخول</button>
-        <div id="loginMessage" class="error"></div>
-        <p style="margin-top:20px; color:#888;">كلمة السر: 1234</p>
+        <div id="loginMsg" class="error"></div>
     </div>
 
-    <!-- المحتوى الرئيسي -->
-    <div id="mainSection" class="box hidden">
+    <!-- الواجهة الرئيسية -->
+    <div id="mainBox" class="container hidden">
         <div class="header">
-            <h1>📦 خزنتي الذكية</h1>
+            <h1>📦 خزنتي</h1>
         </div>
-
         <div class="nav-bar">
-            <button onclick="showPage('dashboard')">📋 إدارة المنتجات</button>
-            <button onclick="showPage('store')">🛒 الشراء</button>
-            <button onclick="showPage('settings')">⚙️ الإعدادات</button>
+            <button onclick="showPanel('dashboard')">📋 إدارة المنتجات</button>
+            <button onclick="showPanel('store')">🛒 الشراء</button>
+            <button onclick="showPanel('settings')">⚙️ الإعدادات</button>
             <button onclick="logout()">🚪 خروج</button>
         </div>
 
-        <!-- صفحة الإدارة -->
-        <div id="dashboardPage">
+        <!-- لوحة الإدارة -->
+        <div id="dashboardPanel">
             <div class="form-card">
                 <h3>➕ إضافة منتج</h3>
-                <input type="text" id="prodName" placeholder="اسم المنتج">
-                <input type="number" id="prodPriceEGP" placeholder="السعر بالجنيه">
-                <input type="number" id="prodPriceUSD" placeholder="السعر بالدولار">
-                <input type="text" id="prodLink" placeholder="رابط الشراء">
-                <input type="number" id="prodQty" placeholder="الكمية">
-                <textarea id="prodDesc" rows="2" placeholder="الوصف"></textarea>
+                <input type="text" id="pName" placeholder="اسم المنتج">
+                <input type="number" id="pPriceEGP" placeholder="السعر بالجنيه">
+                <input type="number" id="pPriceUSD" placeholder="السعر بالدولار">
+                <input type="text" id="pLink" placeholder="رابط الشراء">
+                <input type="number" id="pQty" placeholder="الكمية">
+                <textarea id="pDesc" rows="2" placeholder="الوصف"></textarea>
                 <button onclick="addProduct()">➕ إضافة</button>
             </div>
             <h3>المنتجات الحالية</h3>
-            <div id="productsTable"></div>
+            <div id="productsList"></div>
         </div>
 
-        <!-- صفحة الشراء -->
-        <div id="storePage" class="hidden">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <!-- لوحة الشراء -->
+        <div id="storePanel" class="hidden">
+            <div style="display: flex; justify-content: space-between;">
                 <h3>🛍️ المنتجات</h3>
-                <select id="currency" onchange="showStore()">
+                <select id="currency" onchange="refreshStore()">
                     <option value="egp">🇪🇬 جنيه</option>
                     <option value="usd">🇺🇸 دولار</option>
                 </select>
             </div>
-            <div id="storeGrid"></div>
+            <div id="storeItems"></div>
         </div>
 
-        <!-- صفحة الإعدادات -->
-        <div id="settingsPage" class="hidden">
+        <!-- لوحة الإعدادات -->
+        <div id="settingsPanel" class="hidden">
             <div class="form-card">
                 <h3>🔐 تغيير كلمة السر</h3>
                 <input type="password" id="newPass" placeholder="كلمة السر الجديدة">
-                <input type="password" id="confirmNewPass" placeholder="تأكيد كلمة السر">
-                <button onclick="changePassword()">💾 حفظ</button>
-                <div id="settingsMsg" style="margin-top: 10px;"></div>
+                <input type="password" id="confirmPass" placeholder="تأكيد كلمة السر">
+                <button onclick="changeAdminPass()">💾 حفظ</button>
+                <div id="settingMsg" style="margin-top: 10px;"></div>
             </div>
         </div>
     </div>
@@ -161,60 +151,61 @@
 
 <script>
     // مفتاح التخزين
-    const STORAGE_KEY = 'my_simple_store';
+    const KEY = 'my_store_fixed';
     
-    // تحميل البيانات
-    let data = localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-        data = {
+    // تحميل البيانات أو بدء بيانات جديدة
+    let store = localStorage.getItem(KEY);
+    if (!store) {
+        store = {
             password: '1234',
             products: []
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(KEY, JSON.stringify(store));
     } else {
-        data = JSON.parse(data);
+        store = JSON.parse(store);
     }
     
-    let products = data.products;
-    let adminPass = data.password;
+    let products = store.products;
+    let adminPass = store.password;
     
-    // دالة لتحديث التخزين
-    function saveData() {
-        data.products = products;
-        data.password = adminPass;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // حفظ البيانات
+    function saveAll() {
+        store.products = products;
+        store.password = adminPass;
+        localStorage.setItem(KEY, JSON.stringify(store));
     }
     
     // تسجيل الدخول
     window.checkLogin = function() {
-        let pass = document.getElementById('passInput').value;
+        let pass = document.getElementById('passwordInput').value;
         if (pass === adminPass) {
-            localStorage.setItem('logged', 'yes');
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('mainSection').classList.remove('hidden');
-            document.getElementById('loginMessage').innerHTML = '';
-            loadAll();
-            showPage('dashboard');
+            localStorage.setItem('logged_in', 'yes');
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('mainBox').classList.remove('hidden');
+            document.getElementById('loginMsg').innerHTML = '';
+            refreshAll();
+            showPanel('dashboard');
         } else {
-            document.getElementById('loginMessage').innerHTML = '⚠️ كلمة سر خطأ';
+            document.getElementById('loginMsg').innerHTML = '⚠️ كلمة سر خطأ';
         }
     };
     
     window.logout = function() {
-        localStorage.removeItem('logged');
-        document.getElementById('loginSection').classList.remove('hidden');
-        document.getElementById('mainSection').classList.add('hidden');
-        document.getElementById('passInput').value = '';
+        localStorage.removeItem('logged_in');
+        document.getElementById('loginBox').classList.remove('hidden');
+        document.getElementById('mainBox').classList.add('hidden');
+        document.getElementById('passwordInput').value = '';
     };
     
-    function loadAll() {
-        showDashboard();
-        showStore();
+    // تحديث كل الواجهات
+    function refreshAll() {
+        refreshDashboard();
+        refreshStore();
     }
     
-    function showDashboard() {
+    function refreshDashboard() {
         if (products.length === 0) {
-            document.getElementById('productsTable').innerHTML = '<p>✨ لا توجد منتجات</p>';
+            document.getElementById('productsList').innerHTML = '<p>✨ لا توجد منتجات</p>';
             return;
         }
         let html = `<table><thead>汽<th>المنتج</th><th>جنيه</th><th>دولار</th><th>الكمية</th><th>الرابط</th><th></th></thead><tbody>`;
@@ -226,23 +217,23 @@
                         <td>${p.price_usd} $</td>
                         <td>${p.qty}</td>
                         <td><a href="${p.link}" target="_blank">رابط</a></td>
-                        <td><button class="btn-danger" onclick="deleteProduct(${i})">حذف</button></td>
+                        <td><button class="btn-danger" onclick="deleteItem(${i})">حذف</button></td>
                     </tr>`;
         }
         html += `</tbody></table>`;
-        document.getElementById('productsTable').innerHTML = html;
+        document.getElementById('productsList').innerHTML = html;
     }
     
     window.addProduct = function() {
-        let name = document.getElementById('prodName').value;
-        let price_egp = parseFloat(document.getElementById('prodPriceEGP').value);
-        let price_usd = parseFloat(document.getElementById('prodPriceUSD').value) || 0;
-        let link = document.getElementById('prodLink').value;
-        let qty = parseInt(document.getElementById('prodQty').value) || 0;
-        let desc = document.getElementById('prodDesc').value;
+        let name = document.getElementById('pName').value;
+        let price_egp = parseFloat(document.getElementById('pPriceEGP').value);
+        let price_usd = parseFloat(document.getElementById('pPriceUSD').value) || 0;
+        let link = document.getElementById('pLink').value;
+        let qty = parseInt(document.getElementById('pQty').value) || 0;
+        let desc = document.getElementById('pDesc').value;
         
         if (!name || isNaN(price_egp) || !link) {
-            alert('املأ البيانات الأساسية');
+            alert('املأ الاسم والسعر والرابط');
             return;
         }
         
@@ -254,31 +245,31 @@
             qty: qty,
             desc: desc
         });
-        saveData();
+        saveAll();
         
-        document.getElementById('prodName').value = '';
-        document.getElementById('prodPriceEGP').value = '';
-        document.getElementById('prodPriceUSD').value = '';
-        document.getElementById('prodLink').value = '';
-        document.getElementById('prodQty').value = '';
-        document.getElementById('prodDesc').value = '';
+        document.getElementById('pName').value = '';
+        document.getElementById('pPriceEGP').value = '';
+        document.getElementById('pPriceUSD').value = '';
+        document.getElementById('pLink').value = '';
+        document.getElementById('pQty').value = '';
+        document.getElementById('pDesc').value = '';
         
-        loadAll();
+        refreshAll();
         alert('✅ تم الإضافة');
     };
     
-    window.deleteProduct = function(index) {
-        if (confirm('حذف؟')) {
+    window.deleteItem = function(index) {
+        if (confirm('حذف المنتج؟')) {
             products.splice(index, 1);
-            saveData();
-            loadAll();
+            saveAll();
+            refreshAll();
         }
     };
     
-    function showStore() {
+    function refreshStore() {
         let currency = document.getElementById('currency').value;
         if (products.length === 0) {
-            document.getElementById('storeGrid').innerHTML = '<p>لا توجد منتجات</p>';
+            document.getElementById('storeItems').innerHTML = '<p>📭 لا توجد منتجات</p>';
             return;
         }
         let html = '';
@@ -291,64 +282,64 @@
                         <div class="price">${price}</div>
                         <div>المتاح: ${p.qty}</div>
                         <div><label>الكمية:</label>
-                        <input type="number" id="qty_${i}" min="1" max="${p.qty}" value="1" style="width:70px"></div>
-                        <button class="btn-success" onclick="buyProduct(${i})">شراء</button>
+                        <input type="number" id="buyQty_${i}" min="1" max="${p.qty}" value="1" style="width:70px"></div>
+                        <button class="btn-success" onclick="buyItem(${i})">شراء</button>
                     </div>`;
         }
-        document.getElementById('storeGrid').innerHTML = html;
+        document.getElementById('storeItems').innerHTML = html;
     }
     
-    window.buyProduct = function(index) {
-        let qtyInput = document.getElementById(`qty_${index}`);
+    window.buyItem = function(index) {
+        let qtyInput = document.getElementById(`buyQty_${index}`);
         let qty = qtyInput ? parseInt(qtyInput.value) : 1;
         let product = products[index];
         if (!product || !product.link) {
-            alert('لا يوجد رابط');
+            alert('لا يوجد رابط شراء');
             return;
         }
         if (qty <= 0 || qty > product.qty) {
-            alert('كمية غير صالحة');
+            alert('كمية غير صحيحة');
             return;
         }
         window.open(product.link, '_blank');
         product.qty -= qty;
-        saveData();
-        loadAll();
-        alert(`تم شراء ${qty} من ${product.name}`);
+        saveAll();
+        refreshAll();
+        alert(`✅ تم شراء ${qty} من ${product.name}`);
     };
     
-    window.changePassword = function() {
+    window.changeAdminPass = function() {
         let newPass = document.getElementById('newPass').value;
-        let confirm = document.getElementById('confirmNewPass').value;
+        let confirm = document.getElementById('confirmPass').value;
         if (!newPass) {
-            document.getElementById('settingsMsg').innerHTML = 'أدخل كلمة سر جديدة';
+            document.getElementById('settingMsg').innerHTML = '✏️ أدخل كلمة سر جديدة';
             return;
         }
         if (newPass !== confirm) {
-            document.getElementById('settingsMsg').innerHTML = 'غير متطابقة';
+            document.getElementById('settingMsg').innerHTML = '❌ غير متطابقة';
             return;
         }
         adminPass = newPass;
-        saveData();
-        document.getElementById('settingsMsg').innerHTML = '✅ تم التغيير';
+        saveAll();
+        document.getElementById('settingMsg').innerHTML = '✅ تم تغيير كلمة السر';
         document.getElementById('newPass').value = '';
-        document.getElementById('confirmNewPass').value = '';
-        setTimeout(() => document.getElementById('settingsMsg').innerHTML = '', 2000);
+        document.getElementById('confirmPass').value = '';
+        setTimeout(() => document.getElementById('settingMsg').innerHTML = '', 2000);
     };
     
-    window.showPage = function(page) {
-        document.getElementById('dashboardPage').style.display = page === 'dashboard' ? 'block' : 'none';
-        document.getElementById('storePage').style.display = page === 'store' ? 'block' : 'none';
-        document.getElementById('settingsPage').style.display = page === 'settings' ? 'block' : 'none';
-        if (page === 'store') showStore();
+    window.showPanel = function(panel) {
+        document.getElementById('dashboardPanel').style.display = panel === 'dashboard' ? 'block' : 'none';
+        document.getElementById('storePanel').style.display = panel === 'store' ? 'block' : 'none';
+        document.getElementById('settingsPanel').style.display = panel === 'settings' ? 'block' : 'none';
+        if (panel === 'store') refreshStore();
     };
     
-    // التحقق من تسجيل الدخول السابق
-    if (localStorage.getItem('logged') === 'yes') {
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('mainSection').classList.remove('hidden');
-        loadAll();
-        showPage('dashboard');
+    // إذا كان مسجل قبل كده
+    if (localStorage.getItem('logged_in') === 'yes') {
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('mainBox').classList.remove('hidden');
+        refreshAll();
+        showPanel('dashboard');
     }
 </script>
 </body>
