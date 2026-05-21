@@ -530,7 +530,7 @@
 <div class="message" id="messageToast">✅ تمت العملية</div>
 
 <script>
-    // ===================== إعدادات Supabase (تم تحديثها بمفاتيحك) =====================
+    // ===================== إعدادات Supabase (مفاتيحك) =====================
     const SUPABASE_URL = "https://defaultsb.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_bcN3M6Ih0Y3Fhf3bk873GQ_Sd4p4BOy";
     
@@ -556,7 +556,6 @@
             });
             
             if(!response.ok) {
-                const errorText = await response.text();
                 throw new Error(`فشل في تحميل البيانات: ${response.status}`);
             }
             
@@ -579,12 +578,12 @@
                     'Prefer': 'return-representation'
                 },
                 body: JSON.stringify({
-                    name: name,
+                    product_name: name,
                     description: description,
                     price_egp: parseFloat(price_egp),
                     price_usd: parseFloat(price_usd),
                     link: link || null,
-                    additional_desc: additional_desc || null
+                    additional_description: additional_desc || null
                 })
             });
             
@@ -596,8 +595,6 @@
             const newProduct = await response.json();
             if(newProduct && newProduct.length > 0) {
                 products.unshift(newProduct[0]);
-            } else {
-                products.unshift({id: Date.now(), name, description, price_egp, price_usd, link, additional_desc});
             }
             renderProducts();
             showMessage('✅ تم إضافة المنتج إلى قاعدة البيانات السحابية');
@@ -620,7 +617,6 @@
             });
             
             if(!response.ok) {
-                const errorText = await response.text();
                 throw new Error(`فشل في حذف المنتج: ${response.status}`);
             }
             
@@ -647,14 +643,14 @@
         
         grid.innerHTML = products.map(prod => `
             <div class="product-card">
-                <div class="product-name">${escapeHtml(prod.name)}</div>
+                <div class="product-name">${escapeHtml(prod.product_name)}</div>
                 <div class="product-desc">📌 ${escapeHtml(prod.description)}</div>
                 <div class="product-prices">
                     <span class="price-egp">🇪🇬 ${Number(prod.price_egp).toLocaleString()} جنيه</span>
                     <span class="price-usd">🇺🇸 ${Number(prod.price_usd).toLocaleString()} دولار</span>
                 </div>
                 ${prod.link ? `<div class="product-link">🔗 <a href="${escapeHtml(prod.link)}" target="_blank">${escapeHtml(prod.link.length > 50 ? prod.link.substring(0,50)+'...' : prod.link)}</a></div>` : '<div class="product-link">🔗 لا يوجد رابط</div>'}
-                <div class="product-additional">📎 ${escapeHtml(prod.additional_desc) || 'لا يوجد وصف إضافي'}</div>
+                <div class="product-additional">📎 ${escapeHtml(prod.additional_description) || 'لا يوجد وصف إضافي'}</div>
                 <button class="delete-product" onclick="deleteProduct(${prod.id})">🗑 حذف المنتج</button>
             </div>
         `).join('');
@@ -747,7 +743,7 @@
         });
     }
     
-    // ===================== تهيئة الأحداث وتحسين الكليكات =====================
+    // ===================== تهيئة الأحداث =====================
     document.getElementById('doLoginBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
@@ -755,7 +751,6 @@
         login(email, pass);
     });
     
-    // دخول بضغط Enter
     document.getElementById('loginPassword')?.addEventListener('keypress', (e) => {
         if(e.key === 'Enter') {
             e.preventDefault();
@@ -815,18 +810,15 @@
         }
     });
     
-    // إغلاق المودال بالضغط خارجها
     modal?.addEventListener('click', (e) => {
         if(e.target === modal) {
             modal.style.display = 'none';
         }
     });
     
-    // تحميل كلمة السر المحفوظة
     const savedPass = localStorage.getItem('app_password');
     if(savedPass) DEFAULT_PASSWORD = savedPass;
     
-    // بدء التشغيل
     checkSession();
 </script>
 </body>
