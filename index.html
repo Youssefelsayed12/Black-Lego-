@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>اللهم صل على النبي 🤲 - نظام إدارة المنتجات | متصل بقاعدة بيانات سحابية</title>
+    <title>اللهم صل على النبي 🤲 - نظام إدارة المنتجات</title>
     <style>
         * {
             margin: 0;
@@ -23,7 +23,6 @@
             margin: 0 auto;
         }
 
-        /* شاشة تسجيل الدخول */
         .login-screen {
             position: fixed;
             top: 0;
@@ -35,7 +34,6 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: 0.3s;
         }
 
         .login-card {
@@ -70,13 +68,11 @@
             border-radius: 50px;
             color: white;
             font-size: 1rem;
-            transition: 0.3s;
         }
 
         .login-card input:focus {
             outline: none;
             border-color: #facc15;
-            box-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
         }
 
         .login-card button {
@@ -100,10 +96,8 @@
             color: #ef4444;
             text-align: center;
             margin-top: 15px;
-            font-size: 0.85rem;
         }
 
-        /* المحتوى الرئيسي */
         .main-content {
             display: none;
             animation: fadeIn 0.5s;
@@ -140,7 +134,6 @@
         .user-area {
             display: flex;
             gap: 12px;
-            flex-wrap: wrap;
         }
 
         .change-pw-btn, .logout-btn {
@@ -149,7 +142,6 @@
             border-radius: 50px;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.1s;
         }
 
         .change-pw-btn:active, .logout-btn:active {
@@ -159,7 +151,6 @@
         .change-pw-btn { background: #3b82f6; color: white; }
         .logout-btn { background: #ef4444; color: white; }
 
-        /* نموذج إضافة منتج */
         .add-product-form {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 40px;
@@ -189,7 +180,6 @@
         .form-group label {
             color: #facc15;
             font-weight: bold;
-            font-size: 0.9rem;
         }
 
         .form-group input, .form-group textarea {
@@ -199,7 +189,6 @@
             padding: 12px 16px;
             color: white;
             font-size: 0.95rem;
-            transition: 0.2s;
         }
 
         .form-group input:focus, .form-group textarea:focus {
@@ -215,7 +204,6 @@
             border-radius: 50px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 1rem;
             transition: 0.1s;
         }
 
@@ -223,7 +211,6 @@
             transform: scale(0.97);
         }
 
-        /* كروت المنتجات */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -237,13 +224,12 @@
             border-radius: 36px;
             padding: 22px;
             border: 1px solid rgba(250, 204, 21, 0.2);
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
         .product-card:hover {
             transform: translateY(-5px);
             border-color: #facc15;
-            background: rgba(255, 255, 255, 0.12);
         }
 
         .product-name {
@@ -251,20 +237,17 @@
             font-weight: bold;
             color: #facc15;
             margin-bottom: 12px;
-            word-break: break-word;
         }
 
         .product-desc {
             color: #cbd5e1;
             margin-bottom: 15px;
-            line-height: 1.5;
         }
 
         .product-prices {
             display: flex;
             gap: 15px;
             margin-bottom: 15px;
-            flex-wrap: wrap;
         }
 
         .price-egp {
@@ -272,7 +255,6 @@
             padding: 6px 14px;
             border-radius: 50px;
             color: #22c55e;
-            font-weight: bold;
         }
 
         .price-usd {
@@ -280,22 +262,11 @@
             padding: 6px 14px;
             border-radius: 50px;
             color: #3b82f6;
-            font-weight: bold;
-        }
-
-        .product-link {
-            margin-bottom: 12px;
         }
 
         .product-link a {
             color: #facc15;
             text-decoration: none;
-            word-break: break-all;
-            font-size: 0.85rem;
-        }
-
-        .product-link a:hover {
-            text-decoration: underline;
         }
 
         .product-additional {
@@ -314,15 +285,12 @@
             border-radius: 30px;
             color: white;
             cursor: pointer;
-            font-weight: bold;
-            transition: 0.1s;
         }
 
         .delete-product:active {
             transform: scale(0.96);
         }
 
-        /* مودال تغيير كلمة السر */
         .modal {
             display: none;
             position: fixed;
@@ -353,13 +321,12 @@
 
         .modal-content input {
             width: 100%;
-            padding: 14px 18px;
+            padding: 14px;
             margin-bottom: 18px;
             background: #0f172a;
             border: 1px solid #334155;
             border-radius: 50px;
             color: white;
-            font-size: 1rem;
         }
 
         .modal-buttons {
@@ -372,13 +339,7 @@
             padding: 12px;
             border-radius: 50px;
             border: none;
-            font-weight: bold;
             cursor: pointer;
-            transition: 0.1s;
-        }
-
-        .modal-buttons button:active {
-            transform: scale(0.96);
         }
 
         .save-pw { background: #22c55e; color: white; }
@@ -394,15 +355,6 @@
             border-radius: 50px;
             display: none;
             z-index: 1200;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .loading {
-            text-align: center;
-            color: #facc15;
-            padding: 40px;
-            font-size: 1.2rem;
         }
 
         .footer {
@@ -418,46 +370,28 @@
             color: #facc15;
             text-decoration: none;
         }
-
-        @media (max-width: 700px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
-            .user-area {
-                justify-content: center;
-            }
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            .products-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- شاشة الدخول -->
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
             <h2>🤲 اللهم صل على النبي</h2>
-            <h2 style="font-size:1.2rem; margin-top:-10px;">🔐 تسجيل الدخول</h2>
+            <h2 style="font-size:1.2rem;">🔐 تسجيل الدخول</h2>
             <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" value="admin@example.com">
             <input type="password" id="loginPassword" placeholder="كلمة السر" value="123456">
             <button id="doLoginBtn">دخول</button>
             <div class="login-error" id="loginError"></div>
-            <p style="color:#94a3b8; font-size:0.7rem; text-align:center; margin-top:20px;">البيانات الافتراضية: admin@example.com / 123456</p>
+            <p style="color:#94a3b8; font-size:0.7rem; text-align:center; margin-top:20px;">admin@example.com / 123456</p>
         </div>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <div class="main-content" id="mainContent">
         <div class="header">
             <div class="logo">
                 <h1>🛍️ نظام إدارة المنتجات</h1>
-                <p>اللهم صل على محمد وعلى آل محمد 🤲 | متصل بقاعدة بيانات سحابية</p>
+                <p>اللهم صل على محمد وعلى آل محمد 🤲</p>
             </div>
             <div class="user-area">
                 <button class="change-pw-btn" id="changePwBtn">🔑 تغيير كلمة السر</button>
@@ -474,7 +408,7 @@
                 </div>
                 <div class="form-group">
                     <label>📝 2. الوصف الأول *</label>
-                    <input type="text" id="prodDesc" placeholder="وصف مختصر للمنتج">
+                    <input type="text" id="prodDesc" placeholder="وصف مختصر">
                 </div>
             </div>
             <div class="form-row">
@@ -484,36 +418,31 @@
                 </div>
                 <div class="form-group">
                     <label>💵 4. السعر بالدولار *</label>
-                    <input type="number" id="prodPriceUSD" placeholder="مثال: 520" step="0.01">
+                    <input type="number" id="prodPriceUSD" placeholder="مثال: 520">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>🔗 5. رابط المنتج</label>
-                    <input type="url" id="prodLink" placeholder="https://example.com/product">
+                    <input type="url" id="prodLink" placeholder="https://example.com">
                 </div>
                 <div class="form-group">
                     <label>📋 6. الوصف الإضافي</label>
-                    <textarea id="prodAdditional" rows="2" placeholder="تفاصيل إضافية عن المنتج (ضمان، مواصفات...)"></textarea>
+                    <textarea id="prodAdditional" rows="2" placeholder="تفاصيل إضافية"></textarea>
                 </div>
             </div>
-            <button class="submit-btn" id="addProductBtn">✨ إضافة المنتج إلى قاعدة البيانات</button>
+            <button class="submit-btn" id="addProductBtn">✨ إضافة المنتج</button>
         </div>
 
-        <div class="products-grid" id="productsGrid">
-            <div class="loading">⏳ جاري تحميل المنتجات من قاعدة البيانات...</div>
-        </div>
+        <div class="products-grid" id="productsGrid"></div>
         
         <div class="footer">
-            <p>🔗 المشروع على GitHub: 
-                <a href="https://github.com/Youssefelsayed12/Black-Lego-.git" target="_blank">github.com/Youssefelsayed12/Black-Lego</a>
-            </p>
+            <p>🔗 <a href="https://github.com/Youssefelsayed12/Black-Lego-.git" target="_blank">github.com/Youssefelsayed12/Black-Lego</a></p>
             <p>🤲 اللهم صل على سيدنا محمد وعلى آله وصحبه أجمعين</p>
         </div>
     </div>
 </div>
 
-<!-- مودال تغيير كلمة السر -->
 <div class="modal" id="changePwModal">
     <div class="modal-content">
         <h3>🔐 تغيير كلمة السر</h3>
@@ -530,255 +459,158 @@
 <div class="message" id="messageToast">✅ تمت العملية</div>
 
 <script>
-    // ===================== إعدادات Supabase (مفاتيحك) =====================
-    const SUPABASE_URL = "https://defaultsb.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_bcN3M6Ih0Y3Fhf3bk873GQ_Sd4p4BOy";
-    
-    // بيانات تسجيل الدخول الافتراضية
     let DEFAULT_EMAIL = "admin@example.com";
     let DEFAULT_PASSWORD = "123456";
-    
-    let isLoggedIn = false;
     let products = [];
-    
-    // ===================== دوال التعامل مع Supabase =====================
-    async function fetchProducts() {
-        const grid = document.getElementById('productsGrid');
-        if(!grid) return;
-        grid.innerHTML = '<div class="loading">⏳ جاري تحميل المنتجات...</div>';
-        
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            
-            if(!response.ok) {
-                throw new Error(`فشل في تحميل البيانات: ${response.status}`);
-            }
-            
-            products = await response.json();
-            renderProducts();
-        } catch(error) {
-            console.error('خطأ في جلب المنتجات:', error);
-            grid.innerHTML = '<div style="color:#ef4444; text-align:center; padding:40px;">❌ خطأ في الاتصال بقاعدة البيانات. تأكد من إعدادات Supabase وأن الجدول موجود.</div>';
-        }
+
+    function saveProducts() {
+        localStorage.setItem('products_local', JSON.stringify(products));
     }
-    
-    async function addProductToDB(name, description, price_egp, price_usd, link, additional_desc) {
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return-representation'
-                },
-                body: JSON.stringify({
-                    product_name: name,
-                    description: description,
-                    price_egp: parseFloat(price_egp),
-                    price_usd: parseFloat(price_usd),
-                    link: link || null,
-                    additional_description: additional_desc || null
-                })
-            });
-            
-            if(!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`فشل في إضافة المنتج: ${response.status}`);
-            }
-            
-            const newProduct = await response.json();
-            if(newProduct && newProduct.length > 0) {
-                products.unshift(newProduct[0]);
-            }
-            renderProducts();
-            showMessage('✅ تم إضافة المنتج إلى قاعدة البيانات السحابية');
-            return true;
-        } catch(error) {
-            console.error('خطأ في إضافة المنتج:', error);
-            showMessage('❌ فشل في إضافة المنتج: ' + error.message, true);
-            return false;
+
+    function loadProducts() {
+        const saved = localStorage.getItem('products_local');
+        if(saved) {
+            products = JSON.parse(saved);
+        } else {
+            products = [
+                { id: 1, name: "لابتوب احترافي", description: "لابتوب بشاشة 15.6 بوصة", priceEGP: 25000, priceUSD: 520, link: "https://example.com/laptop", additionalDesc: "ضمان سنتين" },
+                { id: 2, name: "ماوس لاسلكي", description: "ماوس عالي الدقة", priceEGP: 450, priceUSD: 9.50, link: "https://example.com/mouse", additionalDesc: "يدعم Bluetooth" },
+                { id: 3, name: "شاشة 24 بوصة", description: "شاشة Full HD", priceEGP: 5500, priceUSD: 115, link: "https://example.com/monitor", additionalDesc: "مناسبة للألعاب" }
+            ];
+            saveProducts();
         }
+        renderProducts();
     }
-    
-    async function deleteProductFromDB(id) {
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            
-            if(!response.ok) {
-                throw new Error(`فشل في حذف المنتج: ${response.status}`);
-            }
-            
-            products = products.filter(p => p.id !== id);
-            renderProducts();
-            showMessage('🗑 تم حذف المنتج من قاعدة البيانات');
-            return true;
-        } catch(error) {
-            console.error('خطأ في حذف المنتج:', error);
-            showMessage('❌ فشل في حذف المنتج', true);
-            return false;
-        }
-    }
-    
-    // عرض المنتجات في الواجهة
+
     function renderProducts() {
         const grid = document.getElementById('productsGrid');
         if(!grid) return;
         
         if(products.length === 0) {
-            grid.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:60px;">📭 لا توجد منتجات، أضف منتجاً جديداً</div>';
+            grid.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:60px;">📭 لا توجد منتجات</div>';
             return;
         }
         
         grid.innerHTML = products.map(prod => `
             <div class="product-card">
-                <div class="product-name">${escapeHtml(prod.product_name)}</div>
+                <div class="product-name">${escapeHtml(prod.name)}</div>
                 <div class="product-desc">📌 ${escapeHtml(prod.description)}</div>
                 <div class="product-prices">
-                    <span class="price-egp">🇪🇬 ${Number(prod.price_egp).toLocaleString()} جنيه</span>
-                    <span class="price-usd">🇺🇸 ${Number(prod.price_usd).toLocaleString()} دولار</span>
+                    <span class="price-egp">🇪🇬 ${prod.priceEGP.toLocaleString()} جنيه</span>
+                    <span class="price-usd">🇺🇸 ${prod.priceUSD.toLocaleString()} دولار</span>
                 </div>
-                ${prod.link ? `<div class="product-link">🔗 <a href="${escapeHtml(prod.link)}" target="_blank">${escapeHtml(prod.link.length > 50 ? prod.link.substring(0,50)+'...' : prod.link)}</a></div>` : '<div class="product-link">🔗 لا يوجد رابط</div>'}
-                <div class="product-additional">📎 ${escapeHtml(prod.additional_description) || 'لا يوجد وصف إضافي'}</div>
-                <button class="delete-product" onclick="deleteProduct(${prod.id})">🗑 حذف المنتج</button>
+                ${prod.link ? `<div class="product-link">🔗 <a href="${escapeHtml(prod.link)}" target="_blank">${escapeHtml(prod.link)}</a></div>` : ''}
+                <div class="product-additional">📎 ${escapeHtml(prod.additionalDesc) || 'لا يوجد وصف إضافي'}</div>
+                <button class="delete-product" onclick="deleteProduct(${prod.id})">🗑 حذف</button>
             </div>
         `).join('');
     }
-    
+
+    function addProduct(name, desc, priceEGP, priceUSD, link, additional) {
+        if(!name || !desc || !priceEGP || !priceUSD) {
+            showMessage('❌ يرجى ملء الحقول المطلوبة', true);
+            return false;
+        }
+        const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+        products.push({
+            id: newId,
+            name: name.trim(),
+            description: desc.trim(),
+            priceEGP: parseFloat(priceEGP),
+            priceUSD: parseFloat(priceUSD),
+            link: link || '',
+            additionalDesc: additional || ''
+        });
+        saveProducts();
+        renderProducts();
+        showMessage('✅ تم إضافة المنتج');
+        return true;
+    }
+
     window.deleteProduct = function(id) {
-        if(confirm('هل أنت متأكد من حذف هذا المنتج من قاعدة البيانات السحابية؟')) {
-            deleteProductFromDB(id);
+        if(confirm('هل أنت متأكد من الحذف؟')) {
+            products = products.filter(p => p.id !== id);
+            saveProducts();
+            renderProducts();
+            showMessage('🗑 تم الحذف');
         }
     };
-    
-    // ===================== دوال تسجيل الدخول =====================
+
     function login(email, password) {
         if(email === DEFAULT_EMAIL && password === DEFAULT_PASSWORD) {
-            isLoggedIn = true;
             localStorage.setItem('isLoggedIn', 'true');
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
-            fetchProducts();
-            showMessage("✨ مرحباً بك، تم تسجيل الدخول بنجاح");
+            loadProducts();
+            showMessage("✨ تم تسجيل الدخول");
             return true;
         } else {
-            document.getElementById('loginError').innerText = '❌ البريد الإلكتروني أو كلمة السر غير صحيحة';
+            document.getElementById('loginError').innerText = '❌ غير صحيح';
             return false;
         }
     }
-    
+
     function logout() {
-        isLoggedIn = false;
         localStorage.removeItem('isLoggedIn');
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('loginEmail').value = DEFAULT_EMAIL;
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('loginError').innerText = '';
-        showMessage("🚪 تم تسجيل الخروج");
+        showMessage("🚪 تم الخروج");
     }
-    
+
     function checkSession() {
-        const logged = localStorage.getItem('isLoggedIn');
-        if(logged === 'true') {
-            isLoggedIn = true;
+        if(localStorage.getItem('isLoggedIn') === 'true') {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
-            fetchProducts();
-        } else {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainContent').style.display = 'none';
-            document.getElementById('loginEmail').value = DEFAULT_EMAIL;
+            loadProducts();
         }
     }
-    
+
     function changePassword(current, newPass, confirm) {
         if(current !== DEFAULT_PASSWORD) {
             showMessage('❌ كلمة السر الحالية غير صحيحة', true);
             return false;
         }
         if(newPass.length < 4) {
-            showMessage('❌ كلمة السر الجديدة يجب أن تكون 4 أحرف على الأقل', true);
+            showMessage('❌ 4 أحرف على الأقل', true);
             return false;
         }
         if(newPass !== confirm) {
-            showMessage('❌ كلمة السر الجديدة وتأكيدها غير متطابقين', true);
+            showMessage('❌ غير متطابقتين', true);
             return false;
         }
         DEFAULT_PASSWORD = newPass;
-        localStorage.setItem('app_password', DEFAULT_PASSWORD);
-        showMessage('✅ تم تغيير كلمة السر بنجاح');
+        showMessage('✅ تم تغيير كلمة السر');
         return true;
     }
-    
-    // ===================== دوال مساعدة =====================
+
     function showMessage(text, isError = false) {
         const toast = document.getElementById('messageToast');
         toast.textContent = text;
         toast.style.background = isError ? '#ef4444' : '#22c55e';
         toast.style.display = 'block';
-        setTimeout(() => {
-            toast.style.display = 'none';
-        }, 3000);
+        setTimeout(() => toast.style.display = 'none', 2500);
     }
-    
+
     function escapeHtml(str) {
         if(!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if(m === '&') return '&amp;';
-            if(m === '<') return '&lt;';
-            if(m === '>') return '&gt;';
-            return m;
-        });
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
-    
-    // ===================== تهيئة الأحداث =====================
-    document.getElementById('doLoginBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const pass = document.getElementById('loginPassword').value;
-        login(email, pass);
+
+    document.getElementById('doLoginBtn')?.addEventListener('click', () => {
+        login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
     });
+
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
     
-    document.getElementById('loginPassword')?.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') {
-            e.preventDefault();
-            document.getElementById('doLoginBtn').click();
-        }
-    });
-    
-    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        logout();
-    });
-    
-    document.getElementById('addProductBtn')?.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('prodName').value;
-        const desc = document.getElementById('prodDesc').value;
-        const priceEGP = document.getElementById('prodPriceEGP').value;
-        const priceUSD = document.getElementById('prodPriceUSD').value;
-        const link = document.getElementById('prodLink').value;
-        const additional = document.getElementById('prodAdditional').value;
-        
-        if(!name || !desc || !priceEGP || !priceUSD) {
-            showMessage('❌ يرجى ملء الحقول المطلوبة (اسم المنتج، الوصف، السعرين)', true);
-            return;
-        }
-        
-        await addProductToDB(name, desc, priceEGP, priceUSD, link, additional);
-        
+    document.getElementById('addProductBtn')?.addEventListener('click', () => {
+        addProduct(
+            document.getElementById('prodName').value,
+            document.getElementById('prodDesc').value,
+            document.getElementById('prodPriceEGP').value,
+            document.getElementById('prodPriceUSD').value,
+            document.getElementById('prodLink').value,
+            document.getElementById('prodAdditional').value
+        );
         document.getElementById('prodName').value = '';
         document.getElementById('prodDesc').value = '';
         document.getElementById('prodPriceEGP').value = '';
@@ -786,39 +618,18 @@
         document.getElementById('prodLink').value = '';
         document.getElementById('prodAdditional').value = '';
     });
-    
-    // مودال تغيير كلمة السر
+
     const modal = document.getElementById('changePwModal');
-    document.getElementById('changePwBtn')?.addEventListener('click', () => {
-        modal.style.display = 'flex';
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-    });
-    
-    document.getElementById('cancelPwBtn')?.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-    
+    document.getElementById('changePwBtn')?.addEventListener('click', () => modal.style.display = 'flex');
+    document.getElementById('cancelPwBtn')?.addEventListener('click', () => modal.style.display = 'none');
     document.getElementById('savePasswordBtn')?.addEventListener('click', () => {
-        const current = document.getElementById('currentPassword').value;
-        const newPass = document.getElementById('newPassword').value;
-        const confirm = document.getElementById('confirmPassword').value;
-        if(changePassword(current, newPass, confirm)) {
-            modal.style.display = 'none';
-            document.getElementById('loginPassword').value = '';
-        }
+        if(changePassword(
+            document.getElementById('currentPassword').value,
+            document.getElementById('newPassword').value,
+            document.getElementById('confirmPassword').value
+        )) modal.style.display = 'none';
     });
-    
-    modal?.addEventListener('click', (e) => {
-        if(e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-    
-    const savedPass = localStorage.getItem('app_password');
-    if(savedPass) DEFAULT_PASSWORD = savedPass;
-    
+
     checkSession();
 </script>
 </body>
