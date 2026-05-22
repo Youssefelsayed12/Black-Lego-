@@ -6,6 +6,9 @@
 <title>أمنياتي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- مكتبة Supabase -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:100vh}
@@ -16,7 +19,7 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 
 /* صفحة الدخول */
 #pgLogin{align-items:center;justify-content:center;padding:20px}
-.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:18px;padding:44px 36px;width:100%;max-width:420px;position:relative}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:18px;padding:44px 36px;width:100%;max-width:420px;position:relative;max-height:90vh;overflow-y:auto}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#d4a04a,transparent);border-radius:18px 18px 0 0}
 .logo-w{width:64px;height:64px;border-radius:16px;background:rgba(212,160,74,.12);border:1px solid rgba(212,160,74,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;color:#d4a04a}
 
@@ -147,11 +150,18 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <div class="card">
 <div class="logo-w"><i class="fas fa-bag-shopping"></i></div>
 <h2 style="text-align:center;font-size:24px;font-weight:900;margin-bottom:5px">قائمة أمنياتي</h2>
-<p style="text-align:center;color:#5a5652;font-size:13px;margin-bottom:32px">سجل دخولك لإدارة قائمة مشترياتك</p>
+<p style="text-align:center;color:#5a5652;font-size:13px;margin-bottom:32px">سجل بياناتك لإدارة قائمة مشترياتك</p>
+
+<!-- حقول الجديدة عشان Supabase -->
+<div class="fg"><label>الاسم الكامل</label><div class="fw"><input type="text" id="inName" placeholder="اكتب اسمك هنا"><i class="fas fa-user ic"></i></div></div>
+<div class="fg"><label>رقم التليفون</label><div class="fw"><input type="text" id="inPhone" placeholder="01xxxxxxxxx"><i class="fas fa-phone ic"></i></div></div>
+
+<!-- الحقول القديمة -->
 <div class="fg"><label>البريد الإلكتروني</label><div class="fw"><input type="email" id="inEmail" placeholder="example@email.com"><i class="fas fa-envelope ic"></i></div></div>
 <div class="fg"><label>كلمة السر</label><div class="fw"><input type="password" id="inPass" placeholder="أدخل كلمة السر"><i class="fas fa-lock ic"></i><button type="button" class="sp" id="btnShowPass"><i class="fas fa-eye"></i></button></div></div>
-<button type="button" class="bt bt-g" id="btnLogin" style="margin-top:6px"><i class="fas fa-arrow-right-to-bracket"></i> تسجيل الدخول</button>
-<p style="text-align:center;color:#5a5652;font-size:12px;margin-top:18px">أول مرة؟ هيتم إنشاء حسابك تلقائياً</p>
+
+<button type="button" class="bt bt-g" id="btnLogin" style="margin-top:6px"><i class="fas fa-arrow-right-to-bracket"></i> دخول / تسجيل</button>
+<p style="text-align:center;color:#5a5652;font-size:12px;margin-top:18px">إذا كان بريدك موجوداً ستدخل، وإن كان جديداً سيتم إنشاء حسابك</p>
 </div>
 </div>
 
@@ -250,6 +260,12 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 // انتظر تحميل الصفحة بالكامل
 document.addEventListener("DOMContentLoaded", function() {
 
+    // ===== إعداد Supabase (البيانات الصح) =====
+    const SUPABASE_URL = 'https://jppdudjfgcskfmeicbhp.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGR1ZGpmZ2Nza2ZtZWljYmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTQwNzUsImV4cCI6MjA5NDk3MDA3NX0.psSKqbMWTijxJB7jrbw9P0CXej4Q4XWmwS_sbX29ZRg';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     // ===== متغيرات =====
     var email = null;
     var list = [];
@@ -290,35 +306,65 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ===== تسجيل دخول =====
-    document.getElementById("btnLogin").addEventListener("click", function() {
+    document.getElementById("btnLogin").addEventListener("click", async function() {
+        var name = document.getElementById("inName").value.trim();
+        var phone = document.getElementById("inPhone").value.trim();
         var em = $inEmail.value.trim();
         var pw = $inPass.value;
 
+        if (!name) { toast("أدخل الاسم الكامل", "er"); return; }
+        if (!phone) { toast("أدخل رقم التليفون", "er"); return; }
         if (!em) { toast("أدخل البريد الإلكتروني", "er"); return; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { toast("صيغة البريد غير صحيحة", "er"); return; }
-        if (!pw) { toast("أدخل كلمة السر", "er"); return; }
 
-        var users = getUsers();
+        // البحث في Supabase
+        const { data, error } = await supabase
+            .from('clients')
+            .select('*')
+            .eq('email', em);
 
-        if (users[em]) {
-            if (users[em].pw !== pw) {
-                toast("كلمة السر غلط", "er");
-                return;
-            }
-        } else {
-            users[em] = { pw: pw };
-            setUsers(users);
-            toast("تم إنشاء حسابك بنجاح", "ok");
+        if (error) {
+            console.error(error);
+            toast("خطأ في الاتصال بقاعدة البيانات", "er");
+            return;
         }
 
-        email = em;
-        sessionStorage.setItem("w_s", em);
-        list = getList(em);
+        if (data.length > 0) {
+            email = em;
+            sessionStorage.setItem("w_s", em);
+            list = getList(em);
+            $login.classList.remove("show");
+            $main.classList.add("show");
+            document.getElementById("showEmail").value = em;
+            draw();
+            toast("أهلاً بعودتك، " + data[0]['الاسم النهائي'], "ok");
+        } else {
+            // مستخدم جديد -> إنشاء في Supabase
+            const { data: newData, error: insertError } = await supabase
+                .from('clients')
+                .insert([
+                    { 
+                        'الاسم النهائي': name, 
+                        'email': em, 
+                        'phone': phone 
+                    }
+                ]);
 
-        $login.classList.remove("show");
-        $main.classList.add("show");
-        document.getElementById("showEmail").value = em;
-        draw();
+            if (insertError) {
+                console.error(insertError);
+                toast("فشل إنشاء الحساب", "er");
+                return;
+            }
+
+            email = em;
+            sessionStorage.setItem("w_s", em);
+            list = getList(em);
+            $login.classList.remove("show");
+            $main.classList.add("show");
+            document.getElementById("showEmail").value = em;
+            draw();
+            toast("تم إنشاء حسابك بنجاح", "ok");
+        }
     });
 
     // ===== خروج =====
@@ -564,7 +610,7 @@ document.addEventListener("DOMContentLoaded", function() {
             html += "<div class='pd' data-did='" + p.id + "'>"
                 + "<div class='top'><h3>" + esc(p.name) + "</h3>"
                 + "<div class='btns'>"
-                + "<button type='button' class='bt bt-d bt-i bt-s' data-edit='" + p.id + "' title='تعديل'><i class='fas fa-pen'></i></button>"
+                + "<button type='button' class='bt bt-d bt-i bt-s' data-edit='" + p.id + "' title='تعديل'><i class='fas fa-pen"></i></button>"
                 + "<button type='button' class='bt bt-r bt-i bt-s' data-del='" + p.id + "' title='حذف'><i class='fas fa-trash'></i></button>"
                 + "</div></div>"
                 + dsc
