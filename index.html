@@ -160,7 +160,8 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <div class="fg"><label>البريد الإلكتروني</label><div class="fw"><input type="email" id="inEmail" placeholder="example@email.com"><i class="fas fa-envelope ic"></i></div></div>
 <div class="fg"><label>كلمة السر</label><div class="fw"><input type="password" id="inPass" placeholder="أدخل كلمة السر"><i class="fas fa-lock ic"></i><button type="button" class="sp" id="btnShowPass"><i class="fas fa-eye"></i></button></div></div>
 
-<button type="button" class="bt bt-g" id="btnLogin" style="margin-top:6px"><i class="fas fa-arrow-right-to-bracket"></i> دخول / تسجيل</button>
+<!-- تعديل الزرار: حطينا onclick مباشر -->
+<button type="button" class="bt bt-g" onclick="handleLogin()" style="margin-top:6px"><i class="fas fa-arrow-right-to-bracket"></i> دخول / تسجيل</button>
 <p style="text-align:center;color:#5a5652;font-size:12px;margin-top:18px">إذا كان بريدك موجوداً ستدخل، وإن كان جديداً سيتم إنشاء حسابك</p>
 </div>
 </div>
@@ -172,7 +173,7 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <div class="bar-l">
 <button type="button" class="tb act" id="tbProd"><i class="fas fa-box-open"></i><span class="tx">المنتجات</span><span class="nm" id="badge">0</span></button>
 <button type="button" class="tb" id="tbSett"><i class="fas fa-gear"></i><span class="tx">الإعدادات</span></button>
-<button type="button" class="ob" id="btnOut"><i class="fas fa-right-from-bracket"></i><span class="tx">خروج</span></button>
+<button type="button" class="ob" onclick="handleLogout()"><i class="fas fa-right-from-bracket"></i><span class="tx">خروج</span></button>
 </div>
 </nav>
 <div class="ct">
@@ -182,7 +183,7 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <h2>منتجاتي <em>المرغوبة</em></h2>
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
 <div class="sr"><input type="text" id="inSearch" placeholder="ابحث عن منتج..."><i class="fas fa-search"></i></div>
-<button type="button" class="bt bt-g" id="btnAdd" style="width:auto;padding:11px 20px"><i class="fas fa-plus"></i> إضافة منتج</button>
+<button type="button" class="bt bt-g" onclick="openAddModal()" style="width:auto;padding:11px 20px"><i class="fas fa-plus"></i> إضافة منتج</button>
 </div>
 </div>
 <div class="row">
@@ -195,7 +196,7 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <div class="ei"><i class="fas fa-cart-shopping"></i></div>
 <h3 id="emT">لا توجد منتجات بعد</h3>
 <p id="emD">ابدأ بإضافة المنتجات التي ترغب في شرائها</p>
-<button type="button" class="bt bt-g" id="emBtn" style="width:auto;margin:0 auto"><i class="fas fa-plus"></i> أضف أول منتج</button>
+<button type="button" class="bt bt-g" onclick="openAddModal()" style="width:auto;margin:0 auto"><i class="fas fa-plus"></i> أضف أول منتج</button>
 </div>
 </div>
 
@@ -205,19 +206,19 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <h3><i class="fas fa-envelope-circle-check"></i> تغيير البريد الإلكتروني</h3>
 <div class="fg"><label>البريد الحالي</label><div class="fw"><input type="email" id="showEmail" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-envelope ic"></i></div></div>
 <div class="fg"><label>البريد الجديد</label><div class="fw"><input type="email" id="inNewEmail" placeholder="أدخل البريد الجديد"><i class="fas fa-at ic"></i></div></div>
-<button type="button" class="bt bt-g" id="btnChEmail" style="width:auto"><i class="fas fa-check"></i> تحديث البريد</button>
+<button type="button" class="bt bt-g" onclick="updateEmail()" style="width:auto"><i class="fas fa-check"></i> تحديث البريد</button>
 </div>
 <div class="sb">
 <h3><i class="fas fa-key"></i> تغيير كلمة السر</h3>
-<div class="fg"><label>كلمة السر الحالية</label><div class="fw"><input type="password" id="inOldP" placeholder="أدخل كلمة السر الحالية"><i class="fas fa-lock ic"></i><button type="button" class="sp" data-tog="inOldP"><i class="fas fa-eye"></i></button></div></div>
-<div class="fg"><label>كلمة السر الجديدة</label><div class="fw"><input type="password" id="inNewP" placeholder="أدخل كلمة السر الجديدة"><i class="fas fa-lock ic"></i><button type="button" class="sp" data-tog="inNewP"><i class="fas fa-eye"></i></button></div></div>
-<div class="fg"><label>تأكيد كلمة السر الجديدة</label><div class="fw"><input type="password" id="inConfP" placeholder="أعد إدخال كلمة السر الجديدة"><i class="fas fa-lock ic"></i><button type="button" class="sp" data-tog="inConfP"><i class="fas fa-eye"></i></button></div></div>
-<button type="button" class="bt bt-g" id="btnChPass" style="width:auto"><i class="fas fa-shield-halved"></i> تحديث كلمة السر</button>
+<div class="fg"><label>كلمة السر الحالية</label><div class="fw"><input type="password" id="inOldP" placeholder="أدخل كلمة السر الحالية"><i class="fas fa-lock ic"></i><button type="button" class="sp" onclick="togglePass('inOldP')"><i class="fas fa-eye"></i></button></div></div>
+<div class="fg"><label>كلمة السر الجديدة</label><div class="fw"><input type="password" id="inNewP" placeholder="أدخل كلمة السر الجديدة"><i class="fas fa-lock ic"></i><button type="button" class="sp" onclick="togglePass('inNewP')"><i class="fas fa-eye"></i></button></div></div>
+<div class="fg"><label>تأكيد كلمة السر الجديدة</label><div class="fw"><input type="password" id="inConfP" placeholder="أعد إدخال كلمة السر الجديدة"><i class="fas fa-lock ic"></i><button type="button" class="sp" onclick="togglePass('inConfP')"><i class="fas fa-eye"></i></button></div></div>
+<button type="button" class="bt bt-g" onclick="updatePass()" style="width:auto"><i class="fas fa-shield-halved"></i> تحديث كلمة السر</button>
 </div>
 <div class="sb" style="border-color:rgba(192,57,43,.25)">
 <h3 style="color:#e74c3c"><i class="fas fa-triangle-exclamation"></i> منطقة الخطر</h3>
 <p style="color:#8a857f;font-size:13px;margin-bottom:18px">حذف جميع المنتجات نهائياً. لا يمكن التراجع.</p>
-<button type="button" class="bt bt-r" id="btnDelAll"><i class="fas fa-trash-can"></i> حذف جميع المنتجات</button>
+<button type="button" class="bt bt-r" onclick="deleteAll()" style="width:auto"><i class="fas fa-trash-can"></i> حذف جميع المنتجات</button>
 </div>
 </div>
 
@@ -227,7 +228,7 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <!-- ======= مودال إضافة ======= -->
 <div class="ov" id="ovAdd">
 <div class="md">
-<div class="mh"><h2 id="mdTitle">إضافة منتج جديد</h2><button type="button" class="cx" id="mdClose"><i class="fas fa-xmark"></i></button></div>
+<div class="mh"><h2 id="mdTitle">إضافة منتج جديد</h2><button type="button" class="cx" onclick="closeAddModal()"><i class="fas fa-xmark"></i></button></div>
 <input type="hidden" id="mdEditId">
 <div class="fg"><label>اسم المنتج</label><div class="fw"><input type="text" id="mdName" placeholder="مثال: سماعات لاسلكية"><i class="fas fa-tag ic"></i></div></div>
 <div class="tw">
@@ -237,8 +238,8 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <div class="fg"><label>رابط المنتج</label><div class="fw"><input type="url" id="mdLink" placeholder="https://example.com/product" dir="ltr"><i class="fas fa-link ic"></i></div></div>
 <div class="fg"><label>الوصف</label><div class="fw"><textarea id="mdDesc" placeholder="أضف وصفاً للمنتج..."></textarea></div></div>
 <div style="display:flex;gap:10px;margin-top:6px">
-<button type="button" class="bt bt-g" id="mdSave" style="flex:1"><i class="fas fa-check"></i> <span id="mdSaveTx">إضافة المنتج</span></button>
-<button type="button" class="bt bt-d" id="mdCancel" style="flex:0 0 auto">إلغاء</button>
+<button type="button" class="bt bt-g" onclick="saveProduct()" style="flex:1"><i class="fas fa-check"></i> <span id="mdSaveTx">إضافة المنتج</span></button>
+<button type="button" class="bt bt-d" onclick="closeAddModal()" style="flex:0 0 auto">إلغاء</button>
 </div>
 </div>
 </div>
@@ -250,490 +251,464 @@ body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:
 <h2 style="font-size:18px;font-weight:900;margin-bottom:8px" id="dlTitle">حذف المنتج؟</h2>
 <p style="color:#8a857f;font-size:13px;margin-bottom:24px" id="dlDesc">سيتم حذف هذا المنتج نهائياً</p>
 <div style="display:flex;gap:10px">
-<button type="button" class="bt bt-r" id="dlYes" style="flex:1"><i class="fas fa-trash"></i> حذف</button>
-<button type="button" class="bt bt-d" id="dlNo" style="flex:1">إلغاء</button>
+<button type="button" class="bt bt-r" onclick="confirmDelete()" style="flex:1"><i class="fas fa-trash"></i> حذف</button>
+<button type="button" class="bt bt-d" onclick="closeDelModal()" style="flex:1">إلغاء</button>
 </div>
 </div>
 </div>
 
 <script>
-// انتظر تحميل الصفحة بالكامل
-document.addEventListener("DOMContentLoaded", function() {
+// رسالة تأكيد تشغيل الكود
+alert("تم تحميل الموقع بنجاح. الكود يعمل الآن.");
 
-    // ===== إعداد Supabase (البيانات الصح) =====
-    const SUPABASE_URL = 'https://jppdudjfgcskfmeicbhp.supabase.co'; 
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGR1ZGpmZ2Nza2ZtZWljYmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTQwNzUsImV4cCI6MjA5NDk3MDA3NX0.psSKqbMWTijxJB7jrbw9P0CXej4Q4XWmwS_sbX29ZRg';
+// ===== إعداد Supabase =====
+const SUPABASE_URL = 'https://jppdudjfgcskfmeicbhp.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGR1ZGpmZ2Nza2ZtZWljYmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTQwNzUsImV4cCI6MjA5NDk3MDA3NX0.psSKqbMWTijxJB7jrbw9P0CXej4Q4XWmwS_sbX29ZRg';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== متغيرات =====
+var email = null;
+var list = [];
+var delId = null;
+var delAll = false;
+
+// ===== عناصر =====
+var $login = document.getElementById("pgLogin");
+var $main = document.getElementById("pgMain");
+var $inEmail = document.getElementById("inEmail");
+var $inPass = document.getElementById("inPass");
+var $grid = document.getElementById("grid");
+var $emBox = document.getElementById("emBox");
+var $search = document.getElementById("inSearch");
+
+// ===== وظائف التخزين =====
+function getUsers() {
+    try { return JSON.parse(localStorage.getItem("w_u") || "{}"); }
+    catch(e) { return {}; }
+}
+function setUsers(u) { localStorage.setItem("w_u", JSON.stringify(u)); }
+function getList(e) {
+    try { return JSON.parse(localStorage.getItem("w_p_" + e) || "[]"); }
+    catch(e) { return []; }
+}
+function setList(e, l) { localStorage.setItem("w_p_" + e, JSON.stringify(l)); }
+
+// ===== رسائل =====
+function toast(txt, type) {
+    var c = document.getElementById("tsc");
+    var d = document.createElement("div");
+    var cls = type === "ok" ? "t-ok" : type === "er" ? "t-er" : "t-in";
+    var ico = type === "ok" ? "fa-circle-check" : type === "er" ? "fa-circle-xmark" : "fa-circle-info";
+    d.className = "ts " + cls;
+    d.innerHTML = '<i class="fas ' + ico + '"></i> ' + txt;
+    c.appendChild(d);
+    setTimeout(function() { if(d.parentNode) d.remove(); }, 3000);
+}
+
+// ===== تسجيل دخول (دالة عامة عشان onclick) =====
+window.handleLogin = async function() {
+    alert("تم الضغط! جاري المعالجة...");
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    var name = document.getElementById("inName").value.trim();
+    var phone = document.getElementById("inPhone").value.trim();
+    var em = $inEmail.value.trim();
+    var pw = $inPass.value;
 
-    // ===== متغيرات =====
-    var email = null;
-    var list = [];
-    var delId = null;
-    var delAll = false;
+    if (!name) { toast("أدخل الاسم الكامل", "er"); return; }
+    if (!phone) { toast("أدخل رقم التليفون", "er"); return; }
+    if (!em) { toast("أدخل البريد الإلكتروني", "er"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { toast("صيغة البريد غير صحيحة", "er"); return; }
 
-    // ===== عناصر =====
-    var $login = document.getElementById("pgLogin");
-    var $main = document.getElementById("pgMain");
-    var $inEmail = document.getElementById("inEmail");
-    var $inPass = document.getElementById("inPass");
-    var $grid = document.getElementById("grid");
-    var $emBox = document.getElementById("emBox");
-    var $search = document.getElementById("inSearch");
+    // البحث في Supabase
+    const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('email', em);
 
-    // ===== تخزين =====
-    function getUsers() {
-        try { return JSON.parse(localStorage.getItem("w_u") || "{}"); }
-        catch(e) { return {}; }
-    }
-    function setUsers(u) { localStorage.setItem("w_u", JSON.stringify(u)); }
-    function getList(e) {
-        try { return JSON.parse(localStorage.getItem("w_p_" + e) || "[]"); }
-        catch(e) { return []; }
-    }
-    function setList(e, l) { localStorage.setItem("w_p_" + e, JSON.stringify(l)); }
-
-    // ===== رسائل =====
-    function toast(txt, type) {
-        var c = document.getElementById("tsc");
-        var d = document.createElement("div");
-        var cls = type === "ok" ? "t-ok" : type === "er" ? "t-er" : "t-in";
-        var ico = type === "ok" ? "fa-circle-check" : type === "er" ? "fa-circle-xmark" : "fa-circle-info";
-        d.className = "ts " + cls;
-        d.innerHTML = '<i class="fas ' + ico + '"></i> ' + txt;
-        c.appendChild(d);
-        setTimeout(function() { if(d.parentNode) d.remove(); }, 3000);
+    if (error) {
+        console.error(error);
+        toast("خطأ في الاتصال: " + error.message, "er");
+        return;
     }
 
-    // ===== تسجيل دخول =====
-    document.getElementById("btnLogin").addEventListener("click", async function() {
-        var name = document.getElementById("inName").value.trim();
-        var phone = document.getElementById("inPhone").value.trim();
-        var em = $inEmail.value.trim();
-        var pw = $inPass.value;
-
-        if (!name) { toast("أدخل الاسم الكامل", "er"); return; }
-        if (!phone) { toast("أدخل رقم التليفون", "er"); return; }
-        if (!em) { toast("أدخل البريد الإلكتروني", "er"); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { toast("صيغة البريد غير صحيحة", "er"); return; }
-
-        // البحث في Supabase
-        const { data, error } = await supabase
+    if (data.length > 0) {
+        email = em;
+        sessionStorage.setItem("w_s", em);
+        list = getList(em);
+        $login.classList.remove("show");
+        $main.classList.add("show");
+        document.getElementById("showEmail").value = em;
+        draw();
+        toast("أهلاً بعودتك، " + data[0]['الاسم النهائي'], "ok");
+    } else {
+        const { data: newData, error: insertError } = await supabase
             .from('clients')
-            .select('*')
-            .eq('email', em);
+            .insert([
+                { 
+                    'الاسم النهائي': name, 
+                    'email': em, 
+                    'phone': phone 
+                }
+            ]);
 
-        if (error) {
-            console.error(error);
-            toast("خطأ في الاتصال بقاعدة البيانات", "er");
+        if (insertError) {
+            console.error(insertError);
+            toast("فشل إنشاء الحساب: " + insertError.message, "er");
             return;
         }
 
-        if (data.length > 0) {
-            email = em;
-            sessionStorage.setItem("w_s", em);
-            list = getList(em);
-            $login.classList.remove("show");
-            $main.classList.add("show");
-            document.getElementById("showEmail").value = em;
-            draw();
-            toast("أهلاً بعودتك، " + data[0]['الاسم النهائي'], "ok");
-        } else {
-            // مستخدم جديد -> إنشاء في Supabase
-            const { data: newData, error: insertError } = await supabase
-                .from('clients')
-                .insert([
-                    { 
-                        'الاسم النهائي': name, 
-                        'email': em, 
-                        'phone': phone 
-                    }
-                ]);
+        email = em;
+        sessionStorage.setItem("w_s", em);
+        list = getList(em);
+        $login.classList.remove("show");
+        $main.classList.add("show");
+        document.getElementById("showEmail").value = em;
+        draw();
+        toast("تم إنشاء حسابك بنجاح", "ok");
+    }
+};
 
-            if (insertError) {
-                console.error(insertError);
-                toast("فشل إنشاء الحساب", "er");
-                return;
-            }
+// ===== خروج =====
+window.handleLogout = function() {
+    email = null;
+    list = [];
+    sessionStorage.removeItem("w_s");
+    $main.classList.remove("show");
+    $login.classList.add("show");
+    $inEmail.value = "";
+    $inPass.value = "";
+    goTab("prod");
+    toast("تم تسجيل الخروج", "in");
+};
 
-            email = em;
-            sessionStorage.setItem("w_s", em);
-            list = getList(em);
-            $login.classList.remove("show");
-            $main.classList.add("show");
-            document.getElementById("showEmail").value = em;
-            draw();
-            toast("تم إنشاء حسابك بنجاح", "ok");
+// ===== تبويبات =====
+function goTab(t) {
+    document.getElementById("vProd").style.display = t === "prod" ? "block" : "none";
+    document.getElementById("vSett").style.display = t === "sett" ? "block" : "none";
+    document.getElementById("tbProd").classList.toggle("act", t === "prod");
+    document.getElementById("tbSett").classList.toggle("act", t === "sett");
+}
+document.getElementById("tbProd").addEventListener("click", function() { goTab("prod"); });
+document.getElementById("tbSett").addEventListener("click", function() { goTab("sett"); });
+
+// ===== إظهار/إخفاء كلمة السر =====
+document.getElementById("btnShowPass").addEventListener("click", function() {
+    togglePass($inPass);
+});
+
+function togglePass(inp) {
+    if (typeof inp === "string") inp = document.getElementById(inp);
+    if(!inp) return;
+    var isPass = inp.type === "password";
+    inp.type = isPass ? "text" : "password";
+    // تغيير أيقونة الزرار لو موجودة
+    var btn = inp.nextElementSibling;
+    if (btn && btn.tagName === "BUTTON") {
+        btn.innerHTML = isPass ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+    }
+}
+
+// ===== مودال إضافة =====
+window.openAddModal = function() {
+    document.getElementById("mdEditId").value = "";
+    document.getElementById("mdTitle").textContent = "إضافة منتج جديد";
+    document.getElementById("mdSaveTx").textContent = "إضافة المنتج";
+    document.getElementById("mdName").value = "";
+    document.getElementById("mdEGP").value = "";
+    document.getElementById("mdUSD").value = "";
+    document.getElementById("mdLink").value = "";
+    document.getElementById("mdDesc").value = "";
+    document.getElementById("ovAdd").classList.add("show");
+    setTimeout(function() { document.getElementById("mdName").focus(); }, 150);
+}
+
+function openEdit(id) {
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+            var p = list[i];
+            document.getElementById("mdEditId").value = id;
+            document.getElementById("mdTitle").textContent = "تعديل المنتج";
+            document.getElementById("mdSaveTx").textContent = "حفظ التعديلات";
+            document.getElementById("mdName").value = p.name;
+            document.getElementById("mdEGP").value = p.egp || "";
+            document.getElementById("mdUSD").value = p.usd || "";
+            document.getElementById("mdLink").value = p.link || "";
+            document.getElementById("mdDesc").value = p.desc || "";
+            document.getElementById("ovAdd").classList.add("show");
+            break;
         }
-    });
-
-    // ===== خروج =====
-    document.getElementById("btnOut").addEventListener("click", function() {
-        email = null;
-        list = [];
-        sessionStorage.removeItem("w_s");
-        $main.classList.remove("show");
-        $login.classList.add("show");
-        $inEmail.value = "";
-        $inPass.value = "";
-        goTab("prod");
-        toast("تم تسجيل الخروج", "in");
-    });
-
-    // ===== تبويبات =====
-    function goTab(t) {
-        document.getElementById("vProd").style.display = t === "prod" ? "block" : "none";
-        document.getElementById("vSett").style.display = t === "sett" ? "block" : "none";
-        document.getElementById("tbProd").classList.toggle("act", t === "prod");
-        document.getElementById("tbSett").classList.toggle("act", t === "sett");
     }
-    document.getElementById("tbProd").addEventListener("click", function() { goTab("prod"); });
-    document.getElementById("tbSett").addEventListener("click", function() { goTab("sett"); });
+}
 
-    // ===== إظهار/إخفاء كلمة السر =====
-    document.getElementById("btnShowPass").addEventListener("click", function() {
-        togPass($inPass, this);
-    });
-    var allTogBtns = document.querySelectorAll("[data-tog]");
-    for (var i = 0; i < allTogBtns.length; i++) {
-        allTogBtns[i].addEventListener("click", function() {
-            var inp = document.getElementById(this.getAttribute("data-tog"));
-            togPass(inp, this);
-        });
-    }
-    function togPass(inp, btn) {
-        var ico = btn.querySelector("i");
-        if (inp.type === "password") {
-            inp.type = "text";
-            ico.className = "fas fa-eye-slash";
-        } else {
-            inp.type = "password";
-            ico.className = "fas fa-eye";
-        }
-    }
+window.closeAddModal = function() { 
+    document.getElementById("ovAdd").classList.remove("show"); 
+}
 
-    // ===== مودال إضافة =====
-    function openAdd() {
-        document.getElementById("mdEditId").value = "";
-        document.getElementById("mdTitle").textContent = "إضافة منتج جديد";
-        document.getElementById("mdSaveTx").textContent = "إضافة المنتج";
-        document.getElementById("mdName").value = "";
-        document.getElementById("mdEGP").value = "";
-        document.getElementById("mdUSD").value = "";
-        document.getElementById("mdLink").value = "";
-        document.getElementById("mdDesc").value = "";
-        document.getElementById("ovAdd").classList.add("show");
-        setTimeout(function() { document.getElementById("mdName").focus(); }, 150);
-    }
+document.getElementById("ovAdd").addEventListener("click", function(e) { if(e.target === this) closeAddModal(); });
 
-    function openEdit(id) {
+// ===== حفظ منتج =====
+window.saveProduct = function() {
+    var name = document.getElementById("mdName").value.trim();
+    var egp = parseFloat(document.getElementById("mdEGP").value) || 0;
+    var usd = parseFloat(document.getElementById("mdUSD").value) || 0;
+    var link = document.getElementById("mdLink").value.trim();
+    var desc = document.getElementById("mdDesc").value.trim();
+    var editId = document.getElementById("mdEditId").value;
+
+    if (!name) { toast("أدخل اسم المنتج", "er"); return; }
+    if (egp === 0 && usd === 0) { toast("أدخل سعر واحد على الأقل", "er"); return; }
+
+    if (editId) {
         for (var i = 0; i < list.length; i++) {
-            if (list[i].id === id) {
-                var p = list[i];
-                document.getElementById("mdEditId").value = id;
-                document.getElementById("mdTitle").textContent = "تعديل المنتج";
-                document.getElementById("mdSaveTx").textContent = "حفظ التعديلات";
-                document.getElementById("mdName").value = p.name;
-                document.getElementById("mdEGP").value = p.egp || "";
-                document.getElementById("mdUSD").value = p.usd || "";
-                document.getElementById("mdLink").value = p.link || "";
-                document.getElementById("mdDesc").value = p.desc || "";
-                document.getElementById("ovAdd").classList.add("show");
+            if (list[i].id === editId) {
+                list[i].name = name;
+                list[i].egp = egp;
+                list[i].usd = usd;
+                list[i].link = link;
+                list[i].desc = desc;
                 break;
             }
         }
+        toast("تم تعديل المنتج", "ok");
+    } else {
+        list.unshift({
+            id: "p" + Date.now() + Math.floor(Math.random() * 9999),
+            name: name,
+            egp: egp,
+            usd: usd,
+            link: link,
+            desc: desc
+        });
+        toast("تمت إضافة المنتج", "ok");
+        fireConfetti();
     }
 
-    function closeAdd() { document.getElementById("ovAdd").classList.remove("show"); }
+    setList(email, list);
+    draw();
+    closeAddModal();
+};
 
-    document.getElementById("btnAdd").addEventListener("click", openAdd);
-    document.getElementById("emBtn").addEventListener("click", openAdd);
-    document.getElementById("mdClose").addEventListener("click", closeAdd);
-    document.getElementById("mdCancel").addEventListener("click", closeAdd);
-    document.getElementById("ovAdd").addEventListener("click", function(e) { if(e.target === this) closeAdd(); });
-
-    // ===== حفظ منتج =====
-    document.getElementById("mdSave").addEventListener("click", function() {
-        var name = document.getElementById("mdName").value.trim();
-        var egp = parseFloat(document.getElementById("mdEGP").value) || 0;
-        var usd = parseFloat(document.getElementById("mdUSD").value) || 0;
-        var link = document.getElementById("mdLink").value.trim();
-        var desc = document.getElementById("mdDesc").value.trim();
-        var editId = document.getElementById("mdEditId").value;
-
-        if (!name) { toast("أدخل اسم المنتج", "er"); return; }
-        if (egp === 0 && usd === 0) { toast("أدخل سعر واحد على الأقل", "er"); return; }
-
-        if (editId) {
-            for (var i = 0; i < list.length; i++) {
-                if (list[i].id === editId) {
-                    list[i].name = name;
-                    list[i].egp = egp;
-                    list[i].usd = usd;
-                    list[i].link = link;
-                    list[i].desc = desc;
-                    break;
-                }
-            }
-            toast("تم تعديل المنتج", "ok");
-        } else {
-            list.unshift({
-                id: "p" + Date.now() + Math.floor(Math.random() * 9999),
-                name: name,
-                egp: egp,
-                usd: usd,
-                link: link,
-                desc: desc
-            });
-            toast("تمت إضافة المنتج", "ok");
-            fireConfetti();
-        }
-
+// ===== حذف =====
+window.confirmDelete = function() {
+    if (delAll) {
+        list = [];
         setList(email, list);
         draw();
-        closeAdd();
-    });
-
-    // ===== حذف =====
-    document.getElementById("dlYes").addEventListener("click", function() {
-        if (delAll) {
-            list = [];
+        toast("تم حذف الكل", "ok");
+    } else if (delId) {
+        var card = document.querySelector("[data-did='" + delId + "']");
+        if (card) card.classList.add("out");
+        var tid = delId;
+        setTimeout(function() {
+            var newList = [];
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].id !== tid) newList.push(list[i]);
+            }
+            list = newList;
             setList(email, list);
             draw();
-            toast("تم حذف الكل", "ok");
-        } else if (delId) {
-            var card = document.querySelector("[data-did='" + delId + "']");
-            if (card) card.classList.add("out");
-            var tid = delId;
-            setTimeout(function() {
-                var newList = [];
-                for (var i = 0; i < list.length; i++) {
-                    if (list[i].id !== tid) newList.push(list[i]);
-                }
-                list = newList;
-                setList(email, list);
-                draw();
-                toast("تم الحذف", "ok");
-            }, 300);
+            toast("تم الحذف", "ok");
+        }, 300);
+    }
+    closeDelModal();
+}
+
+function closeDelModal() {
+    document.getElementById("ovDel").classList.remove("show");
+    delId = null;
+    delAll = false;
+}
+
+document.getElementById("ovDel").addEventListener("click", function(e) { if(e.target === this) closeDelModal(); });
+
+function openDel(id) {
+    delId = id;
+    delAll = false;
+    document.getElementById("dlTitle").textContent = "حذف المنتج؟";
+    document.getElementById("dlDesc").textContent = "سيتم حذف هذا المنتج نهائياً";
+    document.getElementById("ovDel").classList.add("show");
+}
+
+window.deleteAll = function() {
+    if (list.length === 0) { toast("لا توجد منتجات", "in"); return; }
+    delAll = true;
+    document.getElementById("dlTitle").textContent = "حذف الكل؟";
+    document.getElementById("dlDesc").textContent = "سيتم حذف " + list.length + " منتج نهائياً";
+    document.getElementById("ovDel").classList.add("show");
+}
+
+// ===== بحث =====
+ $search.addEventListener("input", draw);
+
+// ===== رسم المنتجات =====
+function draw() {
+    var q = $search.value.trim().toLowerCase();
+    var filtered = [];
+    for (var i = 0; i < list.length; i++) {
+        var p = list[i];
+        if (q) {
+            if (p.name.toLowerCase().indexOf(q) === -1 && (!p.desc || p.desc.toLowerCase().indexOf(q) === -1)) continue;
         }
-        closeDel();
-    });
-
-    document.getElementById("dlNo").addEventListener("click", closeDel);
-    document.getElementById("ovDel").addEventListener("click", function(e) { if(e.target === this) closeDel(); });
-
-    function openDel(id) {
-        delId = id;
-        delAll = false;
-        document.getElementById("dlTitle").textContent = "حذف المنتج؟";
-        document.getElementById("dlDesc").textContent = "سيتم حذف هذا المنتج نهائياً";
-        document.getElementById("ovDel").classList.add("show");
+        filtered.push(p);
     }
 
-    function closeDel() {
-        document.getElementById("ovDel").classList.remove("show");
-        delId = null;
-        delAll = false;
+    // إحصائيات
+    var tE = 0, tU = 0;
+    for (var j = 0; j < list.length; j++) {
+        tE += (list[j].egp || 0);
+        tU += (list[j].usd || 0);
     }
+    document.getElementById("stN").textContent = list.length;
+    document.getElementById("stE").textContent = fmtN(tE) + " ج.م";
+    document.getElementById("stU").textContent = "$" + fmtN(tU);
+    document.getElementById("badge").textContent = list.length;
 
-    document.getElementById("btnDelAll").addEventListener("click", function() {
-        if (list.length === 0) { toast("لا توجد منتجات", "in"); return; }
-        delAll = true;
-        document.getElementById("dlTitle").textContent = "حذف الكل؟";
-        document.getElementById("dlDesc").textContent = "سيتم حذف " + list.length + " منتج نهائياً";
-        document.getElementById("ovDel").classList.add("show");
-    });
-
-    // ===== بحث =====
-    $search.addEventListener("input", draw);
-
-    // ===== رسم المنتجات =====
-    function draw() {
-        var q = $search.value.trim().toLowerCase();
-        var filtered = [];
-        for (var i = 0; i < list.length; i++) {
-            var p = list[i];
-            if (q) {
-                if (p.name.toLowerCase().indexOf(q) === -1 && (!p.desc || p.desc.toLowerCase().indexOf(q) === -1)) continue;
-            }
-            filtered.push(p);
-        }
-
-        // إحصائيات
-        var tE = 0, tU = 0;
-        for (var j = 0; j < list.length; j++) {
-            tE += (list[j].egp || 0);
-            tU += (list[j].usd || 0);
-        }
-        document.getElementById("stN").textContent = list.length;
-        document.getElementById("stE").textContent = fmtN(tE) + " ج.م";
-        document.getElementById("stU").textContent = "$" + fmtN(tU);
-        document.getElementById("badge").textContent = list.length;
-
-        if (filtered.length === 0) {
-            $grid.innerHTML = "";
-            $emBox.style.display = "block";
-            if (q && list.length > 0) {
-                document.getElementById("emT").textContent = "لا توجد نتائج";
-                document.getElementById("emD").textContent = "لم يتم العثور على مطابق للبحث";
-                document.getElementById("emBtn").style.display = "none";
-            } else {
-                document.getElementById("emT").textContent = "لا توجد منتجات بعد";
-                document.getElementById("emD").textContent = "ابدأ بإضافة المنتجات التي ترغب في شرائها";
-                document.getElementById("emBtn").style.display = "inline-flex";
-            }
-            return;
-        }
-
-        $emBox.style.display = "none";
-        var html = "";
-
-        for (var k = 0; k < filtered.length; k++) {
-            var p = filtered[k];
-            var dsc = p.desc
-                ? "<p class='dsc'>" + esc(p.desc) + "</p>"
-                : "<p class='dsc' style='opacity:.3;font-style:italic'>لا يوجد وصف</p>";
-            var eHtml = p.egp > 0
-                ? "<span class='tg tg-e'><i class='fas fa-pound-sign' style='margin-left:3px'></i>" + fmtN(p.egp) + " ج.م</span>"
-                : "";
-            var uHtml = p.usd > 0
-                ? "<span class='tg tg-u'><i class='fas fa-dollar-sign' style='margin-left:3px'></i>" + fmtN(p.usd) + "</span>"
-                : "";
-            var lHtml;
-            if (p.link) {
-                var s = p.link.length > 40 ? p.link.substring(0, 40) + "..." : p.link;
-                lHtml = "<a class='lnk' href='" + esc(p.link) + "' target='_blank' rel='noopener'><i class='fas fa-external-link-alt'></i> " + esc(s) + "</a>";
-            } else {
-                lHtml = "<span class='lnk' style='opacity:.35'><i class='fas fa-link-slash'></i> لا يوجد رابط</span>";
-            }
-
-            html += "<div class='pd' data-did='" + p.id + "'>"
-                + "<div class='top'><h3>" + esc(p.name) + "</h3>"
-                + "<div class='btns'>"
-                + "<button type='button' class='bt bt-d bt-i bt-s' data-edit='" + p.id + "' title='تعديل'><i class='fas fa-pen"></i></button>"
-                + "<button type='button' class='bt bt-r bt-i bt-s' data-del='" + p.id + "' title='حذف'><i class='fas fa-trash'></i></button>"
-                + "</div></div>"
-                + dsc
-                + "<div class='prs'>" + eHtml + uHtml + "</div>"
-                + lHtml
-                + "</div>";
-        }
-
-        $grid.innerHTML = html;
-
-        // ربط أحداث التعديل والحذف
-        var editBtns = document.querySelectorAll("[data-edit]");
-        for (var m = 0; m < editBtns.length; m++) {
-            editBtns[m].addEventListener("click", function() {
-                openEdit(this.getAttribute("data-edit"));
-            });
-        }
-        var delBtns = document.querySelectorAll("[data-del]");
-        for (var n = 0; n < delBtns.length; n++) {
-            delBtns[n].addEventListener("click", function() {
-                openDel(this.getAttribute("data-del"));
-            });
-        }
-    }
-
-    // ===== تغيير البريد =====
-    document.getElementById("btnChEmail").addEventListener("click", function() {
-        var ne = document.getElementById("inNewEmail").value.trim();
-        if (!ne) { toast("أدخل البريد الجديد", "er"); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ne)) { toast("صيغة البريد غير صحيحة", "er"); return; }
-        if (ne === email) { toast("البريد مطابق للحالي", "in"); return; }
-        var users = getUsers();
-        if (users[ne]) { toast("البريد ده مستخدم بالفعل", "er"); return; }
-
-        var myL = getList(email);
-        users[ne] = users[email];
-        delete users[email];
-        setUsers(users);
-        setList(ne, myL);
-        localStorage.removeItem("w_p_" + email);
-
-        email = ne;
-        sessionStorage.setItem("w_s", ne);
-        list = myL;
-        document.getElementById("showEmail").value = ne;
-        document.getElementById("inNewEmail").value = "";
-        draw();
-        toast("تم تحديث البريد", "ok");
-    });
-
-    // ===== تغيير كلمة السر =====
-    document.getElementById("btnChPass").addEventListener("click", function() {
-        var op = document.getElementById("inOldP").value;
-        var np = document.getElementById("inNewP").value;
-        var cp = document.getElementById("inConfP").value;
-        if (!op) { toast("أدخل كلمة السر الحالية", "er"); return; }
-        var users = getUsers();
-        if (users[email].pw !== op) { toast("كلمة السر الحالية غلط", "er"); return; }
-        if (!np) { toast("أدخل كلمة السر الجديدة", "er"); return; }
-        if (np.length < 4) { toast("4 أحرف على الأقل", "er"); return; }
-        if (np !== cp) { toast("كلمة السر غير متطابقة", "er"); return; }
-        users[email].pw = np;
-        setUsers(users);
-        document.getElementById("inOldP").value = "";
-        document.getElementById("inNewP").value = "";
-        document.getElementById("inConfP").value = "";
-        toast("تم تحديث كلمة السر", "ok");
-    });
-
-    // ===== أدوات =====
-    function esc(t) {
-        var d = document.createElement("div");
-        d.appendChild(document.createTextNode(t));
-        return d.innerHTML;
-    }
-    function fmtN(n) {
-        if (n === 0) return "0";
-        return n.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
-    }
-    function fireConfetti() {
-        var cl = ["#d4a04a","#e6b85c","#27ae60","#e74c3c","#f0ece4"];
-        for (var i = 0; i < 20; i++) {
-            (function(idx) {
-                setTimeout(function() {
-                    var p = document.createElement("div");
-                    p.className = "cf";
-                    p.style.left = (38 + Math.random() * 24) + "%";
-                    p.style.top = "38%";
-                    p.style.background = cl[Math.floor(Math.random() * cl.length)];
-                    p.style.transform = "translateX(" + (Math.random() * 140 - 70) + "px)";
-                    p.style.animationDuration = (0.7 + Math.random() * 0.5) + "s";
-                    document.body.appendChild(p);
-                    setTimeout(function() { if(p.parentNode) p.remove(); }, 1300);
-                }, idx * 25);
-            })(i);
-        }
-    }
-
-    // ===== كيبورد =====
-    document.addEventListener("keydown", function(e) {
-        if (e.key === "Escape") { closeAdd(); closeDel(); }
-        if (e.key === "Enter" && $login.classList.contains("show")) {
-            document.getElementById("btnLogin").click();
-        }
-    });
-
-    // ===== استعادة الجلسة =====
-    var sess = sessionStorage.getItem("w_s");
-    if (sess) {
-        var users = getUsers();
-        if (users[sess]) {
-            email = sess;
-            list = getList(sess);
-            $login.classList.remove("show");
-            $main.classList.add("show");
-            document.getElementById("showEmail").value = sess;
-            draw();
+    if (filtered.length === 0) {
+        $grid.innerHTML = "";
+        $emBox.style.display = "block";
+        if (q && list.length > 0) {
+            document.getElementById("emT").textContent = "لا توجد نتائج";
+            document.getElementById("emD").textContent = "لم يتم العثور على مطابق للبحث";
+            document.getElementById("emBtn").style.display = "none";
         } else {
-            sessionStorage.removeItem("w_s");
+            document.getElementById("emT").textContent = "لا توجد منتجات بعد";
+            document.getElementById("emD").textContent = "ابدأ بإضافة المنتجات التي ترغب في شرائها";
+            document.getElementById("emBtn").style.display = "inline-flex";
         }
+        return;
     }
 
-}); // نهاية DOMContentLoaded
+    $emBox.style.display = "none";
+    var html = "";
+
+    for (var k = 0; k < filtered.length; k++) {
+        var p = filtered[k];
+        var dsc = p.desc
+            ? "<p class='dsc'>" + esc(p.desc) + "</p>"
+            : "<p class='dsc' style='opacity:.3;font-style:italic'>لا يوجد وصف</p>";
+        var eHtml = p.egp > 0
+            ? "<span class='tg tg-e'><i class='fas fa-pound-sign' style='margin-left:3px'></i>" + fmtN(p.egp) + " ج.م</span>"
+            : "";
+        var uHtml = p.usd > 0
+            ? "<span class='tg tg-u'><i class='fas fa-dollar-sign' style='margin-left:3px'></i>" + fmtN(p.usd) + "</span>"
+            : "";
+        var lHtml;
+        if (p.link) {
+            var s = p.link.length > 40 ? p.link.substring(0, 40) + "..." : p.link;
+            lHtml = "<a class='lnk' href='" + esc(p.link) + "' target='_blank' rel='noopener'><i class='fas fa-external-link-alt'></i> " + esc(s) + "</a>";
+        } else {
+            lHtml = "<span class='lnk' style='opacity:.35'><i class='fas fa-link-slash'></i> لا يوجد رابط</span>";
+        }
+
+        html += "<div class='pd' data-did='" + p.id + "'>"
+            + "<div class='top'><h3>" + esc(p.name) + "</h3>"
+            + "<div class='btns'>"
+            + "<button type='button' class='bt bt-d bt-i bt-s' onclick='openEdit(\"" + p.id + "\")' title='تعديل'><i class='fas fa-pen'></i></button>"
+            + "<button type='button' class='bt bt-r bt-i bt-s' onclick='openDel(\"" + p.id + "\")' title='حذف'><i class='fas fa-trash'></i></button>"
+            + "</div></div>"
+            + dsc
+            + "<div class='prs'>" + eHtml + uHtml + "</div>"
+            + lHtml
+            + "</div>";
+    }
+
+    $grid.innerHTML = html;
+}
+
+// ===== تغيير البريد =====
+window.updateEmail = function() {
+    var ne = document.getElementById("inNewEmail").value.trim();
+    if (!ne) { toast("أدخل البريد الجديد", "er"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ne)) { toast("صيغة البريد غير صحيحة", "er"); return; }
+    if (ne === email) { toast("البريد مطابق للحالي", "in"); return; }
+    var users = getUsers();
+    if (users[ne]) { toast("البريد ده مستخدم بالفعل", "er"); return; }
+
+    var myL = getList(email);
+    users[ne] = users[email];
+    delete users[email];
+    setUsers(users);
+    setList(ne, myL);
+    localStorage.removeItem("w_p_" + email);
+
+    email = ne;
+    sessionStorage.setItem("w_s", ne);
+    list = myL;
+    document.getElementById("showEmail").value = ne;
+    document.getElementById("inNewEmail").value = "";
+    draw();
+    toast("تم تحديث البريد", "ok");
+};
+
+// ===== تغيير كلمة السر =====
+window.updatePass = function() {
+    var op = document.getElementById("inOldP").value;
+    var np = document.getElementById("inNewP").value;
+    var cp = document.getElementById("inConfP").value;
+    if (!op) { toast("أدخل كلمة السر الحالية", "er"); return; }
+    var users = getUsers();
+    if (users[email].pw !== op) { toast("كلمة السر الحالية غلط", "er"); return; }
+    if (!np) { toast("أدخل كلمة السر الجديدة", "er"); return; }
+    if (np.length < 4) { toast("4 أحرف على الأقل", "er"); return; }
+    if (np !== cp) { toast("كلمة السر غير متطابقة", "er"); return; }
+    users[email].pw = np;
+    setUsers(users);
+    document.getElementById("inOldP").value = "";
+    document.getElementById("inNewP").value = "";
+    document.getElementById("inConfP").value = "";
+    toast("تم تحديث كلمة السر", "ok");
+};
+
+// ===== أدوات =====
+function esc(t) {
+    var d = document.createElement("div");
+    d.appendChild(document.createTextNode(t));
+    return d.innerHTML;
+}
+function fmtN(n) {
+    if (n === 0) return "0";
+    return n.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
+}
+function fireConfetti() {
+    var cl = ["#d4a04a","#e6b85c","#27ae60","#e74c3c","#f0ece4"];
+    for (var i = 0; i < 20; i++) {
+        (function(idx) {
+            setTimeout(function() {
+                var p = document.createElement("div");
+                p.className = "cf";
+                p.style.left = (38 + Math.random() * 24) + "%";
+                p.style.top = "38%";
+                p.style.background = cl[Math.floor(Math.random() * cl.length)];
+                p.style.transform = "translateX(" + (Math.random() * 140 - 70) + "px)";
+                p.style.animationDuration = (0.7 + Math.random() * 0.5) + "s";
+                document.body.appendChild(p);
+                setTimeout(function() { if(p.parentNode) p.remove(); }, 1300);
+            }, idx * 25);
+        })(i);
+    }
+}
+
+// ===== كيبورد =====
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") { closeAddModal(); closeDelModal(); }
+});
+
+// ===== استعادة الجلسة =====
+var sess = sessionStorage.getItem("w_s");
+if (sess) {
+    var users = getUsers();
+    if (users[sess]) {
+        email = sess;
+        list = getList(sess);
+        $login.classList.remove("show");
+        $main.classList.add("show");
+        document.getElementById("showEmail").value = sess;
+        draw();
+    } else {
+        sessionStorage.removeItem("w_s");
+    }
+}
+
 </script>
 </body>
 </html>
