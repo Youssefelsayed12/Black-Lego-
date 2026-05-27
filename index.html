@@ -1,714 +1,315 @@
+<?php
+// ==========================================
+// 1. إعدادات قاعدة البيانات (الإتصال بـ Neon)
+// ==========================================
+ $host = "ep-cool-name.us-east-2.aws.neon.tech"; // غيرها لرابط Neon الخاص بك
+ $dbname = "neondb"; // اسم قاعدة البيانات
+ $user = "neondb_owner"; // يوزر Neon
+ $pass = "nPx..."; // باسورد Neon
+
+try {
+    $pdo = new PDO("pgsql:host=$host;dbname=$dbname;sslmode=require", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    die("خطأ في الاتصال بقاعدة البيانات: " . $e->getMessage());
+}
+
+session_start();
+
+// ==========================================
+// 2. معالجة الأوامر
+// ==========================================
+if (isset($_GET['action']) && $_GET['action'] == 'logout') {
+    session_destroy();
+    header("Location: index.php");
+    exit();
+}
+
+// ==========================================
+// 3. معالجة النماذج (POST Requests) - حماية صارمة
+// ==========================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    // أ) تسجيل الدخول
+    if (isset($_POST['login'])) {
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch();
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['username'] = $user['username'];
+        } else {
+            $login_error = "بيانات الدخول غير صحيحة!";
+        }
+    }
+
+    // ب) إضافة عميل جديد (متاح للمدير والموظف)
+    elseif (isset($_POST['add_client']) && isset($_SESSION['user_id'])) {
+        $stmt = $pdo->prepare("INSERT INTO clients (name, email, address, phone, service_type, amount_paid) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $_POST['name'], $_POST['email'], $_POST['address'], 
+            $_POST['phone'], $_POST['service_type'], $_POST['amount_paid']
+        ]);
+        
+        // رسالة نجاح للموظف
+        $success_msg = "تم تسجيل العميل بنجاح.";
+        
+        // المدير يفضل نرجعه للصفحة الرئيسية عادي
+        if($_SESSION['role'] == 'admin') {
+            header("Location: " . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING']);
+            exit();
+        }
+    }
+
+    // ج) سحب فلوس (للمدير فقط - حماية خلفية)
+    elseif (isset($_POST['withdraw']) && isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin') {
+        $amount = floatval($_POST['withdraw_amount']);
+        if ($amount > 0) {
+            $stmt = $pdo->prepare("INSERT INTO withdrawals (amount) VALUES (?)");
+            $stmt->execute([$amount]);
+            header("Location: " . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING']);
+            exit();
+        }
+    }
+
+    // د) تغيير كلمة المرور (للمدير فقط - حماية خلفية)
+    elseif (isset($_POST['change_pass']) && isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin') {
+        $new_password = $_POST['new_password'];
+        if (!empty($new_password)) {
+            $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $stmt->execute([$hashed, $_SESSION['user_id']]);
+            $pass_msg = "<span style='color:green;'>تم تغيير كلمة المرور بنجاح.</span>";
+        }
+    }
+}
+
+// ==========================================
+// 4. جلب البيانات للواجهة (للمدير فقط)
+// ==========================================
+ $is_logged_in = isset($_SESSION['user_id']);
+ $clients = [];
+ $totalClients = 0;
+ $totalIn = 0;
+ $totalOut = 0;
+ $netMoney = 0;
+
+// لا نجلب أي إحصائيات أو بيانات عملاء إلا إذا كان المدير هو من سجل الدخول
+if ($is_logged_in && $_SESSION['role'] == 'admin') {
+    $totalClients = $pdo->query("SELECT COUNT(*) FROM clients")->fetchColumn();
+    $totalIn = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) FROM clients")->fetchColumn();
+    $totalOut = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM withdrawals")->fetchColumn();
+    $netMoney = $totalIn - $totalOut;
+
+    $search = $_GET['search'] ?? '';
+    $from_date = $_GET['from_date'] ?? '';
+    $to_date = $_GET['to_date'] ?? '';
+
+    $sql = "SELECT * FROM clients WHERE 1=1";
+    $params = [];
+
+    if (!empty($search)) {
+        $sql .= " AND (name LIKE ? OR phone LIKE ? OR email LIKE ? OR address LIKE ? OR service_type LIKE ?)";
+        $params = array_merge($params, array_fill(0, 5, "%$search%"));
+    }
+    if (!empty($from_date) && !empty($to_date)) {
+        $sql .= " AND created_at BETWEEN ? AND ?";
+        $params[] = $from_date;
+        $params[] = $to_date . " 23:59:59";
+    }
+
+    $sql .= " ORDER BY created_at DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $clients = $stmt->fetchAll();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أمنياتي</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<!-- مكتبة Supabase -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Cairo',sans-serif;background:#0d0d0d;color:#f0ece4;min-height:100vh}
-
-/* صفحات */
-.pg{display:none;min-height:100vh}
-.pg.show{display:flex}
-
-/* صفحة الدخول */
-#pgLogin{align-items:center;justify-content:center;padding:20px}
-.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:18px;padding:44px 36px;width:100%;max-width:420px;position:relative;max-height:90vh;overflow-y:auto}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#d4a04a,transparent);border-radius:18px 18px 0 0}
-.logo-w{width:64px;height:64px;border-radius:16px;background:rgba(212,160,74,.12);border:1px solid rgba(212,160,74,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;color:#d4a04a}
-
-/* حقول */
-.fg{margin-bottom:18px}
-.fg label{display:block;font-size:13px;font-weight:700;color:#8a857f;margin-bottom:7px}
-.fg .fw{position:relative}
-.fg input,.fg textarea{width:100%;padding:13px 42px 13px 14px;background:#222;border:1px solid #2a2a2a;border-radius:11px;color:#f0ece4;font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:border .3s,box-shadow .3s}
-.fg textarea{padding:13px 14px;min-height:70px;resize:vertical}
-.fg input:focus,.fg textarea:focus{border-color:#d4a04a;box-shadow:0 0 0 3px rgba(212,160,74,.12)}
-.fg input::placeholder,.fg textarea::placeholder{color:#4a4643}
-.fg .ic{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#4a4643;font-size:15px;pointer-events:none;transition:color .3s}
-.fg input:focus~.ic{color:#d4a04a}
-.sp{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#4a4643;cursor:pointer;font-size:13px;padding:4px}
-.sp:hover{color:#d4a04a}
-
-/* أزرار */
-.bt{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 24px;border:none;border-radius:11px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s}
-.bt-g{background:#d4a04a;color:#0d0d0d;width:100%}
-.bt-g:hover{background:#e6b85c;transform:translateY(-2px);box-shadow:0 6px 20px rgba(212,160,74,.3)}
-.bt-d{background:#222;color:#f0ece4;border:1px solid #2a2a2a}
-.bt-d:hover{border-color:#d4a04a;color:#d4a04a}
-.bt-r{background:rgba(192,57,43,.12);color:#e74c3c;border:1px solid rgba(192,57,43,.25)}
-.bt-r:hover{background:#e74c3c;color:#fff}
-.bt-s{padding:8px 14px;font-size:12px;border-radius:8px}
-.bt-i{width:36px;height:36px;padding:0;border-radius:9px}
-
-/* شريط علوي */
-.bar{background:rgba(22,22,22,.92);backdrop-filter:blur(16px);border-bottom:1px solid #2a2a2a;padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.bar-r{display:flex;align-items:center;gap:10px}
-.bar-r .li{width:38px;height:38px;border-radius:10px;background:rgba(212,160,74,.12);border:1px solid rgba(212,160,74,.25);display:flex;align-items:center;justify-content:center;color:#d4a04a;font-size:16px}
-.bar-r h1{font-size:18px;font-weight:900}
-.bar-l{display:flex;align-items:center;gap:4px}
-.tb{padding:9px 16px;border-radius:9px;font-size:13px;font-weight:700;color:#8a857f;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:7px;border:none;background:none;font-family:'Cairo',sans-serif}
-.tb:hover{color:#f0ece4;background:#222}
-.tb.act{color:#d4a04a;background:rgba(212,160,74,.1)}
-.tb .nm{background:#d4a04a;color:#0d0d0d;font-size:10px;font-weight:900;padding:2px 6px;border-radius:5px;min-width:18px;text-align:center}
-.ob{color:#5a5652;font-size:13px;cursor:pointer;transition:all .3s;background:none;border:none;font-family:'Cairo',sans-serif;display:flex;align-items:center;gap:5px;padding:7px 10px;border-radius:7px}
-.ob:hover{color:#e74c3c;background:rgba(192,57,43,.1)}
-
-/* محتوى */
-.ct{flex:1;padding:28px 20px;max-width:1100px;margin:0 auto;width:100%}
-.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px}
-.hd h2{font-size:24px;font-weight:900}
-.hd h2 em{color:#d4a04a;font-style:normal}
-.sr{position:relative;max-width:300px}
-.sr input{width:100%;padding:11px 38px 11px 14px;background:#222;border:1px solid #2a2a2a;border-radius:10px;color:#f0ece4;font-family:'Cairo',sans-serif;font-size:13px;outline:none;transition:all .3s}
-.sr input:focus{border-color:#d4a04a;box-shadow:0 0 0 3px rgba(212,160,74,.12)}
-.sr>i{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#4a4643;font-size:13px}
-
-/* إحصائيات */
-.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
-.sc{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:13px;padding:18px}
-.sc small{font-size:12px;color:#5a5652;display:block;margin-bottom:4px}
-.sc b{font-size:22px;font-weight:900;color:#d4a04a}
-.sc b.gr{color:#27ae60}
-
-/* شبكة منتجات */
-.grd{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.pd{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:22px;transition:all .4s;animation:ci .4s ease}
-@keyframes ci{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.pd:hover{border-color:rgba(212,160,74,.25);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
-.pd .top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
-.pd .top h3{font-size:16px;font-weight:700;line-height:1.5;flex:1;margin-left:10px}
-.pd .top .btns{display:flex;gap:5px;flex-shrink:0}
-.pd .dsc{color:#8a857f;font-size:13px;line-height:1.7;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.pd .prs{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.tg{padding:7px 12px;border-radius:9px;font-size:13px;font-weight:700}
-.tg-e{background:rgba(212,160,74,.1);color:#d4a04a;border:1px solid rgba(212,160,74,.18)}
-.tg-u{background:rgba(39,174,96,.1);color:#27ae60;border:1px solid rgba(39,174,96,.18)}
-.pd .lnk{display:flex;align-items:center;gap:7px;color:#4a4643;font-size:12px;text-decoration:none;transition:color .3s;word-break:break-all}
-.pd .lnk:hover{color:#d4a04a}
-.pd.out{animation:co .35s ease forwards}
-@keyframes co{to{opacity:0;transform:scale(.92) translateY(8px)}}
-
-/* فارغ */
-.em{text-align:center;padding:70px 20px}
-.em .ei{width:90px;height:90px;border-radius:22px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:#4a4643;animation:fl 3s ease-in-out infinite}
-@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.em h3{font-size:20px;font-weight:700;margin-bottom:8px;color:#8a857f}
-.em p{color:#5a5652;font-size:14px;margin-bottom:24px}
-
-/* مودال */
-.ov{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:20px}
-.ov.show{display:flex}
-.md{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:18px;padding:32px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:mi .35s ease}
-@keyframes mi{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-.md .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.md .mh h2{font-size:20px;font-weight:900}
-.cx{width:34px;height:34px;border-radius:9px;background:#222;border:1px solid #2a2a2a;color:#8a857f;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:15px}
-.cx:hover{color:#e74c3c;border-color:#e74c3c}
-.tw{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-/* إعدادات */
-.sb{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:28px;margin-bottom:18px}
-.sb h3{font-size:16px;font-weight:700;margin-bottom:22px;display:flex;align-items:center;gap:9px}
-.sb h3 i{color:#d4a04a}
-
-/* توست */
-.tsc{position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.ts{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px 20px;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:auto;white-space:nowrap;animation:ti .35s ease}
-.ts.t-ok{border-color:rgba(39,174,96,.35)}.ts.t-ok i{color:#27ae60}
-.ts.t-er{border-color:rgba(192,57,43,.35)}.ts.t-er i{color:#e74c3c}
-.ts.t-in{border-color:rgba(212,160,74,.35)}.ts.t-in i{color:#d4a04a}
-@keyframes ti{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
-
-.cf{position:fixed;width:7px;height:7px;border-radius:2px;z-index:300;pointer-events:none;animation:cff 1s ease forwards}
-@keyframes cff{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(180px) rotate(600deg) scale(.2)}}
-
-/* ريسبونسف */
-@media(max-width:640px){
-.grd{grid-template-columns:1fr}
-.tb .tx{display:none}
-.ct{padding:18px 14px}
-.card{padding:30px 22px}
-.row{grid-template-columns:1fr 1fr}
-.hd{flex-direction:column;align-items:flex-start}
-.tw{grid-template-columns:1fr}
-}
-</style>
+    <meta charset="UTF-8">
+    <title>نظام إدارة العملاء</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .stats { display: flex; gap: 20px; margin-bottom: 20px; }
+        .stat-box { flex: 1; padding: 20px; border-radius: 8px; color: #fff; }
+        .bg-primary { background: #007bff; }
+        .bg-success { background: #28a745; }
+        input, button, select { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: #fff; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #000; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: right; }
+        th { background: #f8f9fa; }
+        .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        .form-group { display: flex; flex-direction: column; }
+        .login-box { max-width: 400px; margin: 100px auto; }
+        .text-center { text-align: center; }
+        .error { color: red; }
+        .success { color: green; font-weight: bold; text-align: center; margin-bottom: 15px;}
+    </style>
 </head>
 <body>
 
-<div class="tsc" id="tsc"></div>
+<div class="container">
+    <?php if (!$is_logged_in): ?>
+    <!-- ========================================== -->
+    <!-- شاشة تسجيل الدخول -->
+    <!-- ========================================== -->
+    <div class="card login-box">
+        <h2 class="text-center">تسجيل الدخول</h2>
+        <?php if(isset($login_error)) echo "<p class='text-center error'>$login_error</p>"; ?>
+        <form method="POST">
+            <div class="form-group">
+                <label>اسم المستخدم</label>
+                <input type="text" name="username" required placeholder="admin أو employee">
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" name="password" required placeholder="123456 أو 654321">
+            </div>
+            <button type="submit" name="login" style="width: 100%; margin-top: 10px;">دخول</button>
+        </form>
+    </div>
 
-<!-- ======= الدخول ======= -->
-<div class="pg show" id="pgLogin">
-<div class="card">
-<div class="logo-w"><i class="fas fa-bag-shopping"></i></div>
-<h2 style="text-align:center;font-size:24px;font-weight:900;margin-bottom:5px">قائمة أمنياتي</h2>
-<p style="text-align:center;color:#5a5652;font-size:13px;margin-bottom:32px">سجل بياناتك لإدارة قائمة مشترياتك</p>
-
-<!-- حقول الجديدة عشان Supabase -->
-<div class="fg"><label>الاسم الكامل</label><div class="fw"><input type="text" id="inName" placeholder="اكتب اسمك هنا"><i class="fas fa-user ic"></i></div></div>
-<div class="fg"><label>رقم التليفون</label><div class="fw"><input type="text" id="inPhone" placeholder="01xxxxxxxxx"><i class="fas fa-phone ic"></i></div></div>
-
-<!-- الحقول القديمة -->
-<div class="fg"><label>البريد الإلكتروني</label><div class="fw"><input type="email" id="inEmail" placeholder="example@email.com"><i class="fas fa-envelope ic"></i></div></div>
-<div class="fg"><label>كلمة السر</label><div class="fw"><input type="password" id="inPass" placeholder="أدخل كلمة السر"><i class="fas fa-lock ic"></i><button type="button" class="sp" id="btnShowPass"><i class="fas fa-eye"></i></button></div></div>
-
-<!-- تعديل الزرار: حطينا onclick مباشر -->
-<button type="button" class="bt bt-g" onclick="handleLogin()" style="margin-top:6px"><i class="fas fa-arrow-right-to-bracket"></i> دخول / تسجيل</button>
-<p style="text-align:center;color:#5a5652;font-size:12px;margin-top:18px">إذا كان بريدك موجوداً ستدخل، وإن كان جديداً سيتم إنشاء حسابك</p>
-</div>
-</div>
-
-<!-- ======= الرئيسية ======= -->
-<div class="pg" id="pgMain" style="flex-direction:column">
-<nav class="bar">
-<div class="bar-r"><div class="li"><i class="fas fa-bag-shopping"></i></div><h1>أمنياتي</h1></div>
-<div class="bar-l">
-<button type="button" class="tb act" id="tbProd"><i class="fas fa-box-open"></i><span class="tx">المنتجات</span><span class="nm" id="badge">0</span></button>
-<button type="button" class="tb" id="tbSett"><i class="fas fa-gear"></i><span class="tx">الإعدادات</span></button>
-<button type="button" class="ob" onclick="handleLogout()"><i class="fas fa-right-from-bracket"></i><span class="tx">خروج</span></button>
-</div>
-</nav>
-<div class="ct">
-
-<div id="vProd">
-<div class="hd">
-<h2>منتجاتي <em>المرغوبة</em></h2>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-<div class="sr"><input type="text" id="inSearch" placeholder="ابحث عن منتج..."><i class="fas fa-search"></i></div>
-<button type="button" class="bt bt-g" onclick="openAddModal()" style="width:auto;padding:11px 20px"><i class="fas fa-plus"></i> إضافة منتج</button>
-</div>
-</div>
-<div class="row">
-<div class="sc"><small>عدد المنتجات</small><b id="stN">0</b></div>
-<div class="sc"><small>الإجمالي بالجنيه</small><b id="stE">0 ج.م</b></div>
-<div class="sc"><small>الإجمالي بالدولار</small><b class="gr" id="stU">$0</b></div>
-</div>
-<div class="grd" id="grid"></div>
-<div class="em" id="emBox" style="display:none">
-<div class="ei"><i class="fas fa-cart-shopping"></i></div>
-<h3 id="emT">لا توجد منتجات بعد</h3>
-<p id="emD">ابدأ بإضافة المنتجات التي ترغب في شرائها</p>
-<button type="button" class="bt bt-g" onclick="openAddModal()" style="width:auto;margin:0 auto"><i class="fas fa-plus"></i> أضف أول منتج</button>
-</div>
-</div>
-
-<div id="vSett" style="display:none">
-<div class="hd"><h2>الإعدادات <em>والحساب</em></h2></div>
-<div class="sb">
-<h3><i class="fas fa-envelope-circle-check"></i> تغيير البريد الإلكتروني</h3>
-<div class="fg"><label>البريد الحالي</label><div class="fw"><input type="email" id="showEmail" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-envelope ic"></i></div></div>
-<div class="fg"><label>البريد الجديد</label><div class="fw"><input type="email" id="inNewEmail" placeholder="أدخل البريد الجديد"><i class="fas fa-at ic"></i></div></div>
-<button type="button" class="bt bt-g" onclick="updateEmail()" style="width:auto"><i class="fas fa-check"></i> تحديث البريد</button>
-</div>
-<div class="sb">
-<h3><i class="fas fa-key"></i> تغيير كلمة السر</h3>
-<div class="fg"><label>كلمة السر الحالية</label><div class="fw"><input type="password" id="inOldP" placeholder="أدخل كلمة السر الحالية"><i class="fas fa-lock ic"></i><button type="button" class="sp" onclick="togglePass('inOldP')"><i class="fas fa-eye"></i></button></div></div>
-<div class="fg"><label>كلمة السر الجديدة</label><div class="fw"><input type="password" id="inNewP" placeholder="أدخل كلمة السر الجديدة"><i class="fas fa-lock ic"></i><button type="button" class="sp" onclick="togglePass('inNewP')"><i class="fas fa-eye"></i></button></div></div>
-<div class="fg"><label>تأكيد كلمة السر الجديدة</label><div class="fw"><input type="password" id="inConfP" placeholder="أعد إدخال كلمة السر الجديدة"><i class="fas fa-lock ic"></i><button type="button" class="sp" onclick="togglePass('inConfP')"><i class="fas fa-eye"></i></button></div></div>
-<button type="button" class="bt bt-g" onclick="updatePass()" style="width:auto"><i class="fas fa-shield-halved"></i> تحديث كلمة السر</button>
-</div>
-<div class="sb" style="border-color:rgba(192,57,43,.25)">
-<h3 style="color:#e74c3c"><i class="fas fa-triangle-exclamation"></i> منطقة الخطر</h3>
-<p style="color:#8a857f;font-size:13px;margin-bottom:18px">حذف جميع المنتجات نهائياً. لا يمكن التراجع.</p>
-<button type="button" class="bt bt-r" onclick="deleteAll()" style="width:auto"><i class="fas fa-trash-can"></i> حذف جميع المنتجات</button>
-</div>
-</div>
-
-</div>
-</div>
-
-<!-- ======= مودال إضافة ======= -->
-<div class="ov" id="ovAdd">
-<div class="md">
-<div class="mh"><h2 id="mdTitle">إضافة منتج جديد</h2><button type="button" class="cx" onclick="closeAddModal()"><i class="fas fa-xmark"></i></button></div>
-<input type="hidden" id="mdEditId">
-<div class="fg"><label>اسم المنتج</label><div class="fw"><input type="text" id="mdName" placeholder="مثال: سماعات لاسلكية"><i class="fas fa-tag ic"></i></div></div>
-<div class="tw">
-<div class="fg"><label>السعر بالجنيه</label><div class="fw"><input type="number" id="mdEGP" placeholder="0" min="0" step="0.01"><i class="fas fa-pound-sign ic"></i></div></div>
-<div class="fg"><label>السعر بالدولار</label><div class="fw"><input type="number" id="mdUSD" placeholder="0" min="0" step="0.01"><i class="fas fa-dollar-sign ic"></i></div></div>
-</div>
-<div class="fg"><label>رابط المنتج</label><div class="fw"><input type="url" id="mdLink" placeholder="https://example.com/product" dir="ltr"><i class="fas fa-link ic"></i></div></div>
-<div class="fg"><label>الوصف</label><div class="fw"><textarea id="mdDesc" placeholder="أضف وصفاً للمنتج..."></textarea></div></div>
-<div style="display:flex;gap:10px;margin-top:6px">
-<button type="button" class="bt bt-g" onclick="saveProduct()" style="flex:1"><i class="fas fa-check"></i> <span id="mdSaveTx">إضافة المنتج</span></button>
-<button type="button" class="bt bt-d" onclick="closeAddModal()" style="flex:0 0 auto">إلغاء</button>
-</div>
-</div>
-</div>
-
-<!-- ======= مودال حذف ======= -->
-<div class="ov" id="ovDel">
-<div class="md" style="max-width:380px;text-align:center">
-<div style="width:56px;height:56px;border-radius:14px;background:rgba(192,57,43,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:24px;color:#e74c3c"><i class="fas fa-trash-can"></i></div>
-<h2 style="font-size:18px;font-weight:900;margin-bottom:8px" id="dlTitle">حذف المنتج؟</h2>
-<p style="color:#8a857f;font-size:13px;margin-bottom:24px" id="dlDesc">سيتم حذف هذا المنتج نهائياً</p>
-<div style="display:flex;gap:10px">
-<button type="button" class="bt bt-r" onclick="confirmDelete()" style="flex:1"><i class="fas fa-trash"></i> حذف</button>
-<button type="button" class="bt bt-d" onclick="closeDelModal()" style="flex:1">إلغاء</button>
-</div>
-</div>
-</div>
-
-<script>
-// رسالة تأكيد تشغيل الكود
-alert("تم تحميل الموقع بنجاح. الكود يعمل الآن.");
-
-// ===== إعداد Supabase =====
-const SUPABASE_URL = 'https://jppdudjfgcskfmeicbhp.supabase.co'; 
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGR1ZGpmZ2Nza2ZtZWljYmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTQwNzUsImV4cCI6MjA5NDk3MDA3NX0.psSKqbMWTijxJB7jrbw9P0CXej4Q4XWmwS_sbX29ZRg';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ===== متغيرات =====
-var email = null;
-var list = [];
-var delId = null;
-var delAll = false;
-
-// ===== عناصر =====
-var $login = document.getElementById("pgLogin");
-var $main = document.getElementById("pgMain");
-var $inEmail = document.getElementById("inEmail");
-var $inPass = document.getElementById("inPass");
-var $grid = document.getElementById("grid");
-var $emBox = document.getElementById("emBox");
-var $search = document.getElementById("inSearch");
-
-// ===== وظائف التخزين =====
-function getUsers() {
-    try { return JSON.parse(localStorage.getItem("w_u") || "{}"); }
-    catch(e) { return {}; }
-}
-function setUsers(u) { localStorage.setItem("w_u", JSON.stringify(u)); }
-function getList(e) {
-    try { return JSON.parse(localStorage.getItem("w_p_" + e) || "[]"); }
-    catch(e) { return []; }
-}
-function setList(e, l) { localStorage.setItem("w_p_" + e, JSON.stringify(l)); }
-
-// ===== رسائل =====
-function toast(txt, type) {
-    var c = document.getElementById("tsc");
-    var d = document.createElement("div");
-    var cls = type === "ok" ? "t-ok" : type === "er" ? "t-er" : "t-in";
-    var ico = type === "ok" ? "fa-circle-check" : type === "er" ? "fa-circle-xmark" : "fa-circle-info";
-    d.className = "ts " + cls;
-    d.innerHTML = '<i class="fas ' + ico + '"></i> ' + txt;
-    c.appendChild(d);
-    setTimeout(function() { if(d.parentNode) d.remove(); }, 3000);
-}
-
-// ===== تسجيل دخول (دالة عامة عشان onclick) =====
-window.handleLogin = async function() {
-    alert("تم الضغط! جاري المعالجة...");
+    <?php elseif ($_SESSION['role'] == 'employee'): ?>
+    <!-- ========================================== -->
+    <!-- واجهة الموظف (فقط إضافة عميل) -->
+    <!-- ========================================== -->
     
-    var name = document.getElementById("inName").value.trim();
-    var phone = document.getElementById("inPhone").value.trim();
-    var em = $inEmail.value.trim();
-    var pw = $inPass.value;
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>مرحباً، الموظف</h2>
+        <a href="?action=logout"><button class="btn-danger" type="button">تسجيل الخروج</button></a>
+    </div>
 
-    if (!name) { toast("أدخل الاسم الكامل", "er"); return; }
-    if (!phone) { toast("أدخل رقم التليفون", "er"); return; }
-    if (!em) { toast("أدخل البريد الإلكتروني", "er"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { toast("صيغة البريد غير صحيحة", "er"); return; }
+    <div class="card">
+        <h3 class="text-center">تسجيل عميل جديد</h3>
+        <?php if(isset($success_msg)) echo "<p class='success'>$success_msg</p>"; ?>
+        <form method="POST">
+            <div class="form-row">
+                <div class="form-group"><label>الاسم</label><input type="text" name="name" required></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" name="email"></div>
+                <div class="form-group"><label>رقم التليفون</label><input type="text" name="phone" required></div>
+                <div class="form-group"><label>العنوان</label><input type="text" name="address"></div>
+                <div class="form-group"><label>نوع الخدمة</label><input type="text" name="service_type" required></div>
+                <div class="form-group"><label>المبلغ المدفوع</label><input type="number" step="0.01" name="amount_paid" required></div>
+                <div class="form-group"><label>&nbsp;</label><button type="submit" name="add_client">تسجيل العميل</button></div>
+            </div>
+        </form>
+    </div>
 
-    // البحث في Supabase
-    const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('email', em);
+    <?php else: ?>
+    <!-- ========================================== -->
+    <!-- لوحة تحكم المدير (كل الصلاحيات) -->
+    <!-- ========================================== -->
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>مرحباً، المدير (<?php echo $_SESSION['username']; ?>)</h2>
+        <a href="?action=logout"><button class="btn-danger" type="button">تسجيل الخروج</button></a>
+    </div>
 
-    if (error) {
-        console.error(error);
-        toast("خطأ في الاتصال: " + error.message, "er");
-        return;
-    }
+    <!-- الإحصائيات -->
+    <div class="stats">
+        <div class="stat-box bg-primary">
+            <h3>إجمالي العملاء</h3>
+            <h1><?php echo $totalClients; ?></h1>
+        </div>
+        <div class="stat-box bg-success">
+            <h3>صافي الفلوس المتاحة</h3>
+            <h1><?php echo number_format($netMoney, 2); ?> جنيه</h1>
+            <small>(داخل: <?php echo number_format($totalIn,2); ?> - مسحوب: <?php echo number_format($totalOut,2); ?>)</small>
+        </div>
+    </div>
 
-    if (data.length > 0) {
-        email = em;
-        sessionStorage.setItem("w_s", em);
-        list = getList(em);
-        $login.classList.remove("show");
-        $main.classList.add("show");
-        document.getElementById("showEmail").value = em;
-        draw();
-        toast("أهلاً بعودتك، " + data[0]['الاسم النهائي'], "ok");
-    } else {
-        const { data: newData, error: insertError } = await supabase
-            .from('clients')
-            .insert([
-                { 
-                    'الاسم النهائي': name, 
-                    'email': em, 
-                    'phone': phone 
-                }
-            ]);
+    <!-- فورم إضافة عميل جديد -->
+    <div class="card">
+        <h3>إضافة عميل جديد</h3>
+        <form method="POST">
+            <div class="form-row">
+                <div class="form-group"><label>الاسم</label><input type="text" name="name" required></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" name="email"></div>
+                <div class="form-group"><label>رقم التليفون</label><input type="text" name="phone" required></div>
+                <div class="form-group"><label>العنوان</label><input type="text" name="address"></div>
+                <div class="form-group"><label>نوع الخدمة</label><input type="text" name="service_type" required></div>
+                <div class="form-group"><label>المبلغ المدفوع</label><input type="number" step="0.01" name="amount_paid" required></div>
+                <div class="form-group"><label>&nbsp;</label><button type="submit" name="add_client">إضافة للنظام</button></div>
+            </div>
+        </form>
+    </div>
 
-        if (insertError) {
-            console.error(insertError);
-            toast("فشل إنشاء الحساب: " + insertError.message, "er");
-            return;
-        }
+    <!-- البحث والجرد -->
+    <div class="card">
+        <h3>البحث وجرد العملاء (بالتاريخ)</h3>
+        <form method="GET">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>بحث (اسم، تليفون، جيميل، عنوان، نوع خدمة)</label>
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+                </div>
+                <div class="form-group"><label>من تاريخ</label><input type="date" name="from_date" value="<?php echo $_GET['from_date'] ?? ''; ?>"></div>
+                <div class="form-group"><label>إلى تاريخ</label><input type="date" name="to_date" value="<?php echo $_GET['to_date'] ?? ''; ?>"></div>
+                <div class="form-group"><label>&nbsp;</label><button type="submit">بحث</button></div>
+                <div class="form-group"><label>&nbsp;</label><a href="index.php"><button type="button" class="btn-warning">إلغاء الفلتر</button></a></div>
+            </div>
+        </form>
 
-        email = em;
-        sessionStorage.setItem("w_s", em);
-        list = getList(em);
-        $login.classList.remove("show");
-        $main.classList.add("show");
-        document.getElementById("showEmail").value = em;
-        draw();
-        toast("تم إنشاء حسابك بنجاح", "ok");
-    }
-};
+        <table>
+            <tr>
+                <th>الاسم</th><th>البريد الإلكتروني</th><th>العنوان</th><th>التليفون</th><th>نوع الخدمة</th><th>المبلغ الداخل</th>
+            </tr>
+            <?php foreach ($clients as $c): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($c['name']); ?></td>
+                <td><?php echo htmlspecialchars($c['email']); ?></td>
+                <td><?php echo htmlspecialchars($c['address']); ?></td>
+                <td><?php echo htmlspecialchars($c['phone']); ?></td>
+                <td><?php echo htmlspecialchars($c['service_type']); ?></td>
+                <td><?php echo $c['amount_paid']; ?> ج.م</td>
+            </tr>
+            <?php endforeach; ?>
+            <?php if (empty($clients)) echo '<tr><td colspan="6" class="text-center">لا يوجد عملاء في هذا التاريخ أو بهذا الاسم</td></tr>'; ?>
+        </table>
+    </div>
 
-// ===== خروج =====
-window.handleLogout = function() {
-    email = null;
-    list = [];
-    sessionStorage.removeItem("w_s");
-    $main.classList.remove("show");
-    $login.classList.add("show");
-    $inEmail.value = "";
-    $inPass.value = "";
-    goTab("prod");
-    toast("تم تسجيل الخروج", "in");
-};
+    <!-- الإعدادات -->
+    <div class="card">
+        <h3>الإعدادات</h3>
+        <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+            
+            <!-- تغيير كلمة السر -->
+            <div style="flex: 1; min-width: 300px;">
+                <h4>تغيير كلمة المرور</h4>
+                <?php if(isset($pass_msg)) echo $pass_msg; ?>
+                <form method="POST">
+                    <input type="password" name="new_password" placeholder="كلمة المرور الجديدة" required style="width: 80%;">
+                    <button type="submit" name="change_pass">تغيير</button>
+                </form>
+            </div>
 
-// ===== تبويبات =====
-function goTab(t) {
-    document.getElementById("vProd").style.display = t === "prod" ? "block" : "none";
-    document.getElementById("vSett").style.display = t === "sett" ? "block" : "none";
-    document.getElementById("tbProd").classList.toggle("act", t === "prod");
-    document.getElementById("tbSett").classList.toggle("act", t === "sett");
-}
-document.getElementById("tbProd").addEventListener("click", function() { goTab("prod"); });
-document.getElementById("tbSett").addEventListener("click", function() { goTab("sett"); });
+            <!-- خانة السحب -->
+            <div style="flex: 1; min-width: 300px; border-right: 1px solid #ccc; padding-right: 40px;">
+                <h4>سحب فلوس من الصندوق</h4>
+                <p class="error" style="font-size:12px;">* عند السحب يتم خصم المبلغ فوراً من صافي الرصيد</p>
+                <form method="POST">
+                    <input type="number" step="0.01" name="withdraw_amount" placeholder="المبلغ المراد سحبه" required style="width: 80%;">
+                    <button type="submit" name="withdraw" class="btn-danger">سحب الآن</button>
+                </form>
+            </div>
 
-// ===== إظهار/إخفاء كلمة السر =====
-document.getElementById("btnShowPass").addEventListener("click", function() {
-    togglePass($inPass);
-});
+        </div>
+    </div>
 
-function togglePass(inp) {
-    if (typeof inp === "string") inp = document.getElementById(inp);
-    if(!inp) return;
-    var isPass = inp.type === "password";
-    inp.type = isPass ? "text" : "password";
-    // تغيير أيقونة الزرار لو موجودة
-    var btn = inp.nextElementSibling;
-    if (btn && btn.tagName === "BUTTON") {
-        btn.innerHTML = isPass ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
-    }
-}
+    <?php endif; ?>
+</div>
 
-// ===== مودال إضافة =====
-window.openAddModal = function() {
-    document.getElementById("mdEditId").value = "";
-    document.getElementById("mdTitle").textContent = "إضافة منتج جديد";
-    document.getElementById("mdSaveTx").textContent = "إضافة المنتج";
-    document.getElementById("mdName").value = "";
-    document.getElementById("mdEGP").value = "";
-    document.getElementById("mdUSD").value = "";
-    document.getElementById("mdLink").value = "";
-    document.getElementById("mdDesc").value = "";
-    document.getElementById("ovAdd").classList.add("show");
-    setTimeout(function() { document.getElementById("mdName").focus(); }, 150);
-}
-
-function openEdit(id) {
-    for (var i = 0; i < list.length; i++) {
-        if (list[i].id === id) {
-            var p = list[i];
-            document.getElementById("mdEditId").value = id;
-            document.getElementById("mdTitle").textContent = "تعديل المنتج";
-            document.getElementById("mdSaveTx").textContent = "حفظ التعديلات";
-            document.getElementById("mdName").value = p.name;
-            document.getElementById("mdEGP").value = p.egp || "";
-            document.getElementById("mdUSD").value = p.usd || "";
-            document.getElementById("mdLink").value = p.link || "";
-            document.getElementById("mdDesc").value = p.desc || "";
-            document.getElementById("ovAdd").classList.add("show");
-            break;
-        }
-    }
-}
-
-window.closeAddModal = function() { 
-    document.getElementById("ovAdd").classList.remove("show"); 
-}
-
-document.getElementById("ovAdd").addEventListener("click", function(e) { if(e.target === this) closeAddModal(); });
-
-// ===== حفظ منتج =====
-window.saveProduct = function() {
-    var name = document.getElementById("mdName").value.trim();
-    var egp = parseFloat(document.getElementById("mdEGP").value) || 0;
-    var usd = parseFloat(document.getElementById("mdUSD").value) || 0;
-    var link = document.getElementById("mdLink").value.trim();
-    var desc = document.getElementById("mdDesc").value.trim();
-    var editId = document.getElementById("mdEditId").value;
-
-    if (!name) { toast("أدخل اسم المنتج", "er"); return; }
-    if (egp === 0 && usd === 0) { toast("أدخل سعر واحد على الأقل", "er"); return; }
-
-    if (editId) {
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].id === editId) {
-                list[i].name = name;
-                list[i].egp = egp;
-                list[i].usd = usd;
-                list[i].link = link;
-                list[i].desc = desc;
-                break;
-            }
-        }
-        toast("تم تعديل المنتج", "ok");
-    } else {
-        list.unshift({
-            id: "p" + Date.now() + Math.floor(Math.random() * 9999),
-            name: name,
-            egp: egp,
-            usd: usd,
-            link: link,
-            desc: desc
-        });
-        toast("تمت إضافة المنتج", "ok");
-        fireConfetti();
-    }
-
-    setList(email, list);
-    draw();
-    closeAddModal();
-};
-
-// ===== حذف =====
-window.confirmDelete = function() {
-    if (delAll) {
-        list = [];
-        setList(email, list);
-        draw();
-        toast("تم حذف الكل", "ok");
-    } else if (delId) {
-        var card = document.querySelector("[data-did='" + delId + "']");
-        if (card) card.classList.add("out");
-        var tid = delId;
-        setTimeout(function() {
-            var newList = [];
-            for (var i = 0; i < list.length; i++) {
-                if (list[i].id !== tid) newList.push(list[i]);
-            }
-            list = newList;
-            setList(email, list);
-            draw();
-            toast("تم الحذف", "ok");
-        }, 300);
-    }
-    closeDelModal();
-}
-
-function closeDelModal() {
-    document.getElementById("ovDel").classList.remove("show");
-    delId = null;
-    delAll = false;
-}
-
-document.getElementById("ovDel").addEventListener("click", function(e) { if(e.target === this) closeDelModal(); });
-
-function openDel(id) {
-    delId = id;
-    delAll = false;
-    document.getElementById("dlTitle").textContent = "حذف المنتج؟";
-    document.getElementById("dlDesc").textContent = "سيتم حذف هذا المنتج نهائياً";
-    document.getElementById("ovDel").classList.add("show");
-}
-
-window.deleteAll = function() {
-    if (list.length === 0) { toast("لا توجد منتجات", "in"); return; }
-    delAll = true;
-    document.getElementById("dlTitle").textContent = "حذف الكل؟";
-    document.getElementById("dlDesc").textContent = "سيتم حذف " + list.length + " منتج نهائياً";
-    document.getElementById("ovDel").classList.add("show");
-}
-
-// ===== بحث =====
- $search.addEventListener("input", draw);
-
-// ===== رسم المنتجات =====
-function draw() {
-    var q = $search.value.trim().toLowerCase();
-    var filtered = [];
-    for (var i = 0; i < list.length; i++) {
-        var p = list[i];
-        if (q) {
-            if (p.name.toLowerCase().indexOf(q) === -1 && (!p.desc || p.desc.toLowerCase().indexOf(q) === -1)) continue;
-        }
-        filtered.push(p);
-    }
-
-    // إحصائيات
-    var tE = 0, tU = 0;
-    for (var j = 0; j < list.length; j++) {
-        tE += (list[j].egp || 0);
-        tU += (list[j].usd || 0);
-    }
-    document.getElementById("stN").textContent = list.length;
-    document.getElementById("stE").textContent = fmtN(tE) + " ج.م";
-    document.getElementById("stU").textContent = "$" + fmtN(tU);
-    document.getElementById("badge").textContent = list.length;
-
-    if (filtered.length === 0) {
-        $grid.innerHTML = "";
-        $emBox.style.display = "block";
-        if (q && list.length > 0) {
-            document.getElementById("emT").textContent = "لا توجد نتائج";
-            document.getElementById("emD").textContent = "لم يتم العثور على مطابق للبحث";
-            document.getElementById("emBtn").style.display = "none";
-        } else {
-            document.getElementById("emT").textContent = "لا توجد منتجات بعد";
-            document.getElementById("emD").textContent = "ابدأ بإضافة المنتجات التي ترغب في شرائها";
-            document.getElementById("emBtn").style.display = "inline-flex";
-        }
-        return;
-    }
-
-    $emBox.style.display = "none";
-    var html = "";
-
-    for (var k = 0; k < filtered.length; k++) {
-        var p = filtered[k];
-        var dsc = p.desc
-            ? "<p class='dsc'>" + esc(p.desc) + "</p>"
-            : "<p class='dsc' style='opacity:.3;font-style:italic'>لا يوجد وصف</p>";
-        var eHtml = p.egp > 0
-            ? "<span class='tg tg-e'><i class='fas fa-pound-sign' style='margin-left:3px'></i>" + fmtN(p.egp) + " ج.م</span>"
-            : "";
-        var uHtml = p.usd > 0
-            ? "<span class='tg tg-u'><i class='fas fa-dollar-sign' style='margin-left:3px'></i>" + fmtN(p.usd) + "</span>"
-            : "";
-        var lHtml;
-        if (p.link) {
-            var s = p.link.length > 40 ? p.link.substring(0, 40) + "..." : p.link;
-            lHtml = "<a class='lnk' href='" + esc(p.link) + "' target='_blank' rel='noopener'><i class='fas fa-external-link-alt'></i> " + esc(s) + "</a>";
-        } else {
-            lHtml = "<span class='lnk' style='opacity:.35'><i class='fas fa-link-slash'></i> لا يوجد رابط</span>";
-        }
-
-        html += "<div class='pd' data-did='" + p.id + "'>"
-            + "<div class='top'><h3>" + esc(p.name) + "</h3>"
-            + "<div class='btns'>"
-            + "<button type='button' class='bt bt-d bt-i bt-s' onclick='openEdit(\"" + p.id + "\")' title='تعديل'><i class='fas fa-pen'></i></button>"
-            + "<button type='button' class='bt bt-r bt-i bt-s' onclick='openDel(\"" + p.id + "\")' title='حذف'><i class='fas fa-trash'></i></button>"
-            + "</div></div>"
-            + dsc
-            + "<div class='prs'>" + eHtml + uHtml + "</div>"
-            + lHtml
-            + "</div>";
-    }
-
-    $grid.innerHTML = html;
-}
-
-// ===== تغيير البريد =====
-window.updateEmail = function() {
-    var ne = document.getElementById("inNewEmail").value.trim();
-    if (!ne) { toast("أدخل البريد الجديد", "er"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ne)) { toast("صيغة البريد غير صحيحة", "er"); return; }
-    if (ne === email) { toast("البريد مطابق للحالي", "in"); return; }
-    var users = getUsers();
-    if (users[ne]) { toast("البريد ده مستخدم بالفعل", "er"); return; }
-
-    var myL = getList(email);
-    users[ne] = users[email];
-    delete users[email];
-    setUsers(users);
-    setList(ne, myL);
-    localStorage.removeItem("w_p_" + email);
-
-    email = ne;
-    sessionStorage.setItem("w_s", ne);
-    list = myL;
-    document.getElementById("showEmail").value = ne;
-    document.getElementById("inNewEmail").value = "";
-    draw();
-    toast("تم تحديث البريد", "ok");
-};
-
-// ===== تغيير كلمة السر =====
-window.updatePass = function() {
-    var op = document.getElementById("inOldP").value;
-    var np = document.getElementById("inNewP").value;
-    var cp = document.getElementById("inConfP").value;
-    if (!op) { toast("أدخل كلمة السر الحالية", "er"); return; }
-    var users = getUsers();
-    if (users[email].pw !== op) { toast("كلمة السر الحالية غلط", "er"); return; }
-    if (!np) { toast("أدخل كلمة السر الجديدة", "er"); return; }
-    if (np.length < 4) { toast("4 أحرف على الأقل", "er"); return; }
-    if (np !== cp) { toast("كلمة السر غير متطابقة", "er"); return; }
-    users[email].pw = np;
-    setUsers(users);
-    document.getElementById("inOldP").value = "";
-    document.getElementById("inNewP").value = "";
-    document.getElementById("inConfP").value = "";
-    toast("تم تحديث كلمة السر", "ok");
-};
-
-// ===== أدوات =====
-function esc(t) {
-    var d = document.createElement("div");
-    d.appendChild(document.createTextNode(t));
-    return d.innerHTML;
-}
-function fmtN(n) {
-    if (n === 0) return "0";
-    return n.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
-}
-function fireConfetti() {
-    var cl = ["#d4a04a","#e6b85c","#27ae60","#e74c3c","#f0ece4"];
-    for (var i = 0; i < 20; i++) {
-        (function(idx) {
-            setTimeout(function() {
-                var p = document.createElement("div");
-                p.className = "cf";
-                p.style.left = (38 + Math.random() * 24) + "%";
-                p.style.top = "38%";
-                p.style.background = cl[Math.floor(Math.random() * cl.length)];
-                p.style.transform = "translateX(" + (Math.random() * 140 - 70) + "px)";
-                p.style.animationDuration = (0.7 + Math.random() * 0.5) + "s";
-                document.body.appendChild(p);
-                setTimeout(function() { if(p.parentNode) p.remove(); }, 1300);
-            }, idx * 25);
-        })(i);
-    }
-}
-
-// ===== كيبورد =====
-document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") { closeAddModal(); closeDelModal(); }
-});
-
-// ===== استعادة الجلسة =====
-var sess = sessionStorage.getItem("w_s");
-if (sess) {
-    var users = getUsers();
-    if (users[sess]) {
-        email = sess;
-        list = getList(sess);
-        $login.classList.remove("show");
-        $main.classList.add("show");
-        document.getElementById("showEmail").value = sess;
-        draw();
-    } else {
-        sessionStorage.removeItem("w_s");
-    }
-}
-
-</script>
 </body>
 </html>
